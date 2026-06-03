@@ -1,0 +1,2825 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TimberDesk</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F5F2EC;--surface:#FFFEF9;--surface2:#F0EDE5;--border:#DDD9CE;--border2:#C8C4B8;
+  --text:#0D2B4E;--text2:#1A3D6B;--text3:#4A7BAF;
+  --accent:#1A3D6B;--accent2:#2563A8;--accent-bg:#E8F0FB;
+  --warn:#8B4A00;--warn-bg:#FFF3E0;--danger:#8B1A1A;--danger-bg:#FDEAEA;
+  --info:#1A3D6B;--info-bg:#E8F0FB;--gold:#7A5F00;--gold-bg:#FFF8E1;
+  --closed:#1A4D3A;--closed-bg:#D6F0E6;
+  --topbar-bg:#F5C518;--topbar-text:#0D2B4E;
+  --radius:6px;--radius-lg:10px;
+  --mono:'DM Mono',monospace;--serif:'Fraunces',serif;--sans:'DM Sans',sans-serif;
+}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;min-height:100vh}
+button{font-family:var(--sans);cursor:pointer;border:none;outline:none}
+input,select,textarea{font-family:var(--sans);outline:none}
+.app{display:flex;min-height:100vh}
+/* Sidebar */
+.sidebar{width:220px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0}
+.sidebar-logo{padding:24px 20px 20px;border-bottom:1px solid var(--border)}
+.sidebar-logo .wordmark{font-family:var(--serif);font-size:20px;font-weight:600;color:var(--accent);letter-spacing:-.5px}
+.sidebar-logo .tagline{font-size:11px;color:var(--text3);margin-top:2px;font-family:var(--mono)}
+.sidebar-nav{padding:12px 8px;flex:1}
+.nav-label{font-size:10px;font-weight:500;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;padding:8px 12px 4px}
+.nav-item{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:var(--radius);color:var(--text2);cursor:pointer;transition:all .15s;font-size:13px}
+.nav-item:hover{background:var(--surface2);color:var(--text)}
+.nav-item.active{background:var(--accent-bg);color:var(--accent);font-weight:500}
+.nav-item svg{width:16px;height:16px;opacity:.7;flex-shrink:0}
+.nav-item.active svg{opacity:1}
+.nav-badge{margin-left:auto;background:var(--accent);color:#fff;font-size:10px;font-family:var(--mono);padding:1px 6px;border-radius:10px}
+.sidebar-footer{padding:16px;border-top:1px solid var(--border);font-size:12px;color:var(--text3)}
+.sidebar-footer strong{color:var(--text2);display:block;margin-bottom:2px}
+/* Main */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.topbar{height:56px;background:var(--topbar-bg);border-bottom:1px solid #E0A800;display:flex;align-items:center;padding:0 24px;gap:16px}
+.topbar-title{font-family:var(--serif);font-size:18px;font-weight:600;color:var(--topbar-text);flex:1}
+.topbar-title span{color:#5C4200;font-weight:300;font-style:italic}
+.content{flex:1;overflow-y:auto;padding:24px}
+/* Panels */
+.panel{display:none}
+.panel.active{display:block;animation:fadeIn .2s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+/* Buttons */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:var(--radius);font-size:13px;font-weight:500;transition:all .15s;cursor:pointer;border:none}
+.btn-primary{background:var(--accent);color:#fff}.btn-primary:hover{background:var(--accent2)}
+.btn-secondary{background:var(--surface);border:1px solid var(--border2);color:var(--text2)}.btn-secondary:hover{background:var(--surface2)}
+.btn-ghost{background:transparent;color:var(--text2);padding:6px 10px}.btn-ghost:hover{background:var(--surface2)}
+.btn-danger{background:var(--danger-bg);color:var(--danger);border:1px solid #e8b4b4}
+.btn-success{background:var(--closed-bg);color:var(--closed);border:1px solid #a8d8c4}
+.btn-sm{padding:5px 10px;font-size:12px}
+.btn-icon{width:30px;height:30px;padding:0;display:inline-flex;align-items:center;justify-content:center;border-radius:var(--radius);background:transparent;color:var(--text3);font-size:16px;cursor:pointer;border:none;transition:all .15s}
+.btn-icon:hover{background:var(--surface2);color:var(--text)}
+/* Stats */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px 20px}
+.stat-card.accent{border-color:var(--accent);background:var(--accent-bg)}
+.stat-card.accent .stat-value{color:var(--accent)}
+.stat-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;font-family:var(--mono);margin-bottom:6px}
+.stat-value{font-size:28px;font-weight:600;font-family:var(--serif);line-height:1}
+.stat-sub{font-size:12px;color:var(--text2);margin-top:4px}
+/* Table */
+.table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden}
+.table-header{display:flex;align-items:center;padding:14px 20px;border-bottom:1px solid var(--border);gap:12px;flex-wrap:wrap}
+.table-header h3{font-size:14px;font-weight:500;flex:1}
+.search-box{display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:6px 10px;width:200px}
+.search-box input{background:none;border:none;color:var(--text);font-size:13px;width:100%}
+.search-box input::placeholder{color:var(--text3)}
+table{width:100%;border-collapse:collapse}
+thead th{text-align:left;padding:10px 16px;font-size:11px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;font-family:var(--mono);border-bottom:1px solid var(--border);background:var(--bg)}
+tbody tr{border-bottom:1px solid var(--border);transition:background .1s}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:var(--surface2)}
+tbody td{padding:11px 16px;font-size:13px}
+.empty-row td{text-align:center;color:var(--text3);padding:40px;font-style:italic}
+/* Cotação row forced colors - must override tbody tr defaults */
+tr.row-pending-cot, tr.row-pending-cot:hover{background:#FEF2F2 !important}
+tr.row-pending-cot td{background:#FEF2F2 !important;color:#7F1D1D !important}
+tr.row-quoted-cot, tr.row-quoted-cot:hover{background:#F0FDF4 !important}
+tr.row-quoted-cot td{background:#F0FDF4 !important;color:#14532D !important}
+/* Badges */
+.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:500;font-family:var(--mono)}
+.badge-new{background:var(--info-bg);color:var(--info)}
+.badge-quoting{background:var(--warn-bg);color:var(--warn)}
+.badge-pending{background:var(--gold-bg);color:var(--gold)}
+.badge-sent{background:var(--accent-bg);color:var(--accent)}
+.badge-negotiating{background:#EDE8FB;color:#4A3AAA}
+.badge-closed{background:var(--closed-bg);color:var(--closed)}
+.badge-lost{background:var(--danger-bg);color:var(--danger)}
+.badge-yes{background:var(--accent-bg);color:var(--accent)}
+.badge-no{background:var(--danger-bg);color:var(--danger)}
+.badge-wait{background:var(--warn-bg);color:var(--warn)}
+.chip{display:inline-flex;padding:3px 8px;border-radius:4px;font-size:11px;background:var(--surface2);border:1px solid var(--border);color:var(--text2);font-family:var(--mono)}
+/* Modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:100;display:none;align-items:center;justify-content:center;padding:20px}
+.modal-overlay.open{display:flex}
+.modal{background:var(--surface);border-radius:var(--radius-lg);border:1px solid var(--border);width:100%;max-width:700px;max-height:92vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.modal-head{display:flex;align-items:center;padding:20px 24px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--surface);z-index:2}
+.modal-head h2{font-family:var(--serif);font-size:18px;font-weight:600;flex:1}
+.modal-body{padding:24px}
+.modal-footer{padding:16px 24px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;position:sticky;bottom:0;background:var(--surface)}
+/* Form */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.form-full{grid-column:1/-1}
+.field{display:flex;flex-direction:column;gap:4px}
+.field label{font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;font-family:var(--mono)}
+.field input,.field select,.field textarea{background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius);padding:8px 10px;font-size:13px;color:var(--text);transition:border-color .15s;width:100%}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent)}
+.field textarea{resize:vertical;min-height:72px}
+.field .hint{font-size:11px;color:var(--text3)}
+.section-divider{font-size:11px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;font-family:var(--mono);padding:4px 0;border-bottom:1px solid var(--border);margin:4px 0;grid-column:1/-1}
+/* AI box */
+.ai-box{background:var(--info-bg);border:1px solid #b5cce8;border-radius:var(--radius-lg);padding:16px;margin-bottom:20px}
+.ai-box-label{font-size:11px;font-weight:500;color:var(--info);text-transform:uppercase;letter-spacing:.06em;font-family:var(--mono);margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.ai-box textarea{width:100%;background:var(--surface);border:1px solid #b5cce8;border-radius:var(--radius);padding:10px;font-size:13px;color:var(--text);resize:vertical;min-height:90px}
+.ai-box textarea:focus{border-color:var(--info);outline:none}
+.ai-btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:var(--radius);font-size:13px;font-weight:500;background:var(--info);color:#fff;cursor:pointer;border:none;margin-top:8px}
+.ai-btn:disabled{opacity:.5;cursor:not-allowed}
+.ai-status{font-size:12px;font-family:var(--mono);margin-top:6px;display:none}
+/* Dims table */
+.dims-table{width:100%;border-collapse:collapse}
+.dims-table th{font-size:10px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;font-family:var(--mono);padding:4px 6px;text-align:left;border-bottom:1px solid var(--border)}
+.dims-table td{padding:3px 3px}
+.dims-table td input,.dims-table td select{background:var(--bg);border:1px solid var(--border2);border-radius:4px;padding:5px 7px;font-size:12px;color:var(--text);width:100%}
+.dims-table td input:focus,.dims-table td select:focus{border-color:var(--accent);outline:none}
+.add-dim-btn{display:inline-flex;align-items:center;gap:5px;padding:5px 10px;font-size:12px;color:var(--accent);background:var(--accent-bg);border:1px dashed var(--accent);border-radius:var(--radius);cursor:pointer;margin-top:8px}
+.rm-btn{width:22px;height:22px;display:flex;align-items:center;justify-content:center;border-radius:4px;background:transparent;color:var(--text3);border:none;cursor:pointer;font-size:15px}
+.rm-btn:hover{background:var(--danger-bg);color:var(--danger)}
+/* Detail cards */
+.dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
+.detail-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px}
+.detail-card h4{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);font-family:var(--mono);margin-bottom:14px}
+/* Timeline */
+.tl-item{display:flex;gap:14px;padding-bottom:16px;position:relative}
+.tl-item::before{content:'';position:absolute;left:7px;top:20px;bottom:0;width:1px;background:var(--border)}
+.tl-item:last-child::before{display:none}
+.tl-dot{width:16px;height:16px;border-radius:50%;background:var(--surface);border:2px solid var(--border2);flex-shrink:0;margin-top:2px;z-index:1}
+.tl-dot.done{background:var(--accent);border-color:var(--accent)}
+.tl-dot.active{background:var(--warn);border-color:var(--warn)}
+.tl-title{font-size:13px;font-weight:500}
+.tl-time{font-size:11px;color:var(--text3);font-family:var(--mono)}
+.tl-note{font-size:12px;color:var(--text2);margin-top:2px}
+/* Progress */
+.progress-bar{height:6px;background:var(--surface2);border-radius:3px;overflow:hidden;margin-top:6px}
+.progress-fill{height:100%;background:var(--accent);border-radius:3px}
+/* Supplier cards */
+.supplier-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.sup-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px}
+.sup-card-name{font-weight:500;font-size:14px;margin-bottom:4px}
+.sup-card-loc{font-size:12px;color:var(--text2);margin-bottom:10px}
+.sup-tags{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px}
+.sup-tag{background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:2px 7px;font-size:11px;color:var(--text2);font-family:var(--mono)}
+/* Incoterm pills */
+.incoterm-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:8px}
+.incoterm-pill{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);padding:10px;text-align:center;cursor:pointer;transition:all .15s}
+.incoterm-pill:hover,.incoterm-pill.sel{border-color:var(--accent);background:var(--accent-bg)}
+.ip-code{font-family:var(--mono);font-size:13px;font-weight:500;color:var(--accent)}
+.ip-price{font-family:var(--mono);font-size:11px;color:var(--text2);margin-top:2px}
+/* Follow-up */
+.fu-opts{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:12px 0}
+.fu-opt{border:2px solid var(--border2);border-radius:var(--radius-lg);padding:16px;cursor:pointer;transition:all .15s;text-align:center}
+.fu-opt.won:hover,.fu-opt.won.sel{background:var(--closed-bg);border-color:var(--closed)}
+.fu-opt.lost:hover,.fu-opt.lost.sel{background:var(--danger-bg);border-color:var(--danger)}
+.fu-icon{font-size:26px;margin-bottom:6px}
+.fu-title{font-size:14px;font-weight:500}
+.fu-desc{font-size:12px;color:var(--text2);margin-top:2px}
+.fu-reason{display:none;margin-top:12px}
+.fu-reason.show{display:block}
+/* Toast */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--accent);color:#fff;padding:12px 18px;border-radius:var(--radius-lg);font-size:13px;font-weight:500;box-shadow:0 8px 24px rgba(0,0,0,.2);transform:translateY(80px);opacity:0;transition:all .3s;z-index:9999;pointer-events:none}
+.toast.show{transform:translateY(0);opacity:1}
+/* Resumo row states */
+.row-sent td{background:#FEF3C7 !important;color:#92400E}
+.row-confirmed td{background:#D1FAE5 !important;color:#065F46}
+.row-rejected td{background:#FEE2E2 !important;color:#991B1B}
+.row-sent td .mono-cell,.row-confirmed td .mono-cell,.row-rejected td .mono-cell{color:inherit}
+.btn-confirm{width:28px;height:28px;border-radius:50%;background:#D1FAE5;border:1.5px solid #6EE7B7;color:#065F46;font-size:15px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:all .15s}
+.btn-confirm:hover{background:#A7F3D0;border-color:#34D399}
+.btn-reject{width:28px;height:28px;border-radius:50%;background:#FEE2E2;border:1.5px solid #FCA5A5;color:#991B1B;font-size:14px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:all .15s}
+.btn-reject:hover{background:#FECACA;border-color:#F87171}
+
+/* Product filter */
+.produto-filter{background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius);padding:6px 10px;font-size:12px;color:var(--text2);font-family:var(--mono);cursor:pointer}
+.produto-filter:focus{outline:none;border-color:var(--accent)}
+
+/* Send toggle button */
+.btn-enviar{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:4px;font-size:11px;font-weight:500;font-family:var(--mono);cursor:pointer;border:none;transition:all .2s;margin-top:5px}
+.btn-enviar.pending{background:var(--danger-bg);color:var(--danger);border:1px solid #e8b4b4}
+.btn-enviar.sent{background:var(--closed-bg);color:var(--closed);border:1px solid #a8d8c4;cursor:default}
+/* Multi-supplier block */
+.supplier-block{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px;margin-bottom:12px;position:relative}
+.supplier-block-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.supplier-block-num{font-size:11px;font-weight:500;color:var(--info);font-family:var(--mono);text-transform:uppercase;letter-spacing:.06em}
+.supplier-block-remove{width:22px;height:22px;border-radius:50%;background:var(--danger-bg);border:1px solid #FCA5A5;color:var(--danger);font-size:13px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center}
+
+/* Icon action buttons */
+.icon-btn{width:34px;height:34px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;border:none;font-size:16px;transition:all .2s;flex-shrink:0}
+.icon-btn-cotar-off{background:#FEE2E2;border:1.5px solid #FCA5A5;color:#DC2626}
+.icon-btn-cotar-off:hover{background:#FECACA}
+.icon-btn-cotar-on{background:#DCFCE7;border:1.5px solid #86EFAC;color:#16A34A}
+.icon-btn-send-off{background:#FEE2E2;border:1.5px solid #FCA5A5;color:#DC2626}
+.icon-btn-send-off:hover{background:#FECACA}
+.icon-btn-send-on{background:#DCFCE7;border:1.5px solid #86EFAC;color:#16A34A;cursor:default}
+
+/* Inline quote form — split panel */
+.inline-form-row{display:none;background:var(--surface);border-top:3px solid var(--info)}
+.inline-form-row.open{display:table-row}
+.inline-form-row td{padding:0}
+.split-panel{display:grid;grid-template-columns:1fr 1fr;min-height:340px}
+.split-left{background:var(--bg);border-right:1px solid var(--border);padding:20px 24px}
+.split-right{background:var(--surface);padding:20px 24px}
+.split-title{font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:.08em;font-family:var(--mono);margin-bottom:14px;display:flex;align-items:center;gap:6px}
+.split-title.left{color:var(--info)}
+.split-title.right{color:var(--accent)}
+.rfq-detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 16px}
+.rfq-detail-row{display:flex;flex-direction:column;gap:2px}
+.rfq-detail-row .dk{font-size:10px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;font-family:var(--mono)}
+.rfq-detail-row .dv{font-size:13px;color:var(--text);font-family:var(--mono)}
+.rfq-detail-row.full{grid-column:1/-1}
+.dims-summary{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:8px 10px;margin-top:4px}
+.dims-summary-row{font-size:12px;font-family:var(--mono);color:var(--text2);padding:2px 0;border-bottom:1px solid var(--border)}
+.dims-summary-row:last-child{border-bottom:none}
+.quote-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.quote-form-grid .field label{font-size:10px}
+.quote-form-grid .field input,.quote-form-grid .field select{padding:7px 8px;font-size:12px}
+.quote-form-grid .full{grid-column:1/-1}
+.glue-field{display:none}
+.glue-field.visible{display:flex;flex-direction:column;gap:4px}
+.split-actions{display:flex;gap:8px;padding:14px 24px;border-top:1px solid var(--border);background:var(--surface2);justify-content:flex-end}
+.inline-form-title{font-size:12px;font-weight:500;color:var(--info);font-family:var(--mono);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="sidebar-logo" style="padding:16px 20px;text-align:center">
+    <img src="https://static.wixstatic.com/media/335ee9_23324e07e9f14eda8ff8540c6a5155c5~mv2.png/v1/fill/w_300,h_126,al_c,q_85,enc_avif,quality_auto/MC%20One%20logo.png" alt="MC One" style="max-width:140px;height:auto;display:block;margin:0 auto">
+    <div style="font-size:10px;color:var(--text3);margin-top:6px;font-family:var(--mono);letter-spacing:.06em">TIMBER DESK</div>
+  </div>
+  <div class="sidebar-nav">
+    <div class="nav-label">Visão geral</div>
+    <div class="nav-item active" id="nav-dashboard" onclick="nav('dashboard')">
+      <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Dashboard
+    </div>
+    <div class="nav-label">Negócios</div>
+    <div class="nav-item" id="nav-rfqs" onclick="nav('rfqs')">
+      <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+      RFQs
+      <span class="nav-badge" id="badge-rfqs">3</span>
+    </div>
+    <div class="nav-item" id="nav-cotacoes" onclick="nav('cotacoes')">
+      <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+      Cotações
+      <span class="nav-badge" id="badge-cotas">1</span>
+    </div>
+    <div class="nav-item" id="nav-mercado" onclick="nav('mercado')">
+      <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064"/></svg>
+      Ofertas do Mercado
+    </div>
+    <div class="nav-item" id="nav-resumo" onclick="nav('resumo')">
+      <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+      Resumo das Cotações
+      <span class="nav-badge" id="badge-resumo" style="display:none">0</span>
+    </div>
+  </div>
+  <div class="sidebar-footer" style="text-align:center;padding:12px 16px">
+    <img src="https://static.wixstatic.com/media/335ee9_23324e07e9f14eda8ff8540c6a5155c5~mv2.png/v1/fill/w_300,h_126,al_c,q_85,enc_avif,quality_auto/MC%20One%20logo.png" alt="MC One" style="max-width:80px;height:auto;opacity:.5;display:block;margin:0 auto 4px">
+    <span style="font-size:10px;color:var(--text3);font-family:var(--mono)">mcone.com.br</span>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-title" id="topbar-title">Dashboard <span>— visão geral</span></div>
+  </div>
+  <div class="content">
+
+    <!-- DASHBOARD -->
+    <div class="panel active" id="panel-dashboard">
+      <!-- Dashboard filters -->
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+        <span style="font-size:12px;font-weight:500;color:var(--text2);font-family:var(--mono);text-transform:uppercase;letter-spacing:.06em">Filtrar:</span>
+        <select class="produto-filter" id="dash-filter-year" onchange="renderDashCharts()">
+          <option value="2025">2025</option>
+          <option value="2024">2024</option>
+          <option value="2023">2023</option>
+        </select>
+        <select class="produto-filter" id="dash-filter-month" onchange="renderDashCharts()">
+          <option value="0">Todos os meses</option>
+          <option value="1">Janeiro</option><option value="2">Fevereiro</option>
+          <option value="3">Março</option><option value="4">Abril</option>
+          <option value="5">Maio</option><option value="6">Junho</option>
+          <option value="7">Julho</option><option value="8">Agosto</option>
+          <option value="9">Setembro</option><option value="10">Outubro</option>
+          <option value="11">Novembro</option><option value="12">Dezembro</option>
+        </select>
+        <select class="produto-filter" id="dash-filter-status" onchange="renderDashCharts()">
+          <option value="all">Todas as cotações</option>
+          <option value="confirmed">Fechadas</option>
+          <option value="rejected">Perdidas</option>
+        </select>
+      </div>
+
+      <!-- Stat cards -->
+      <div class="stats-row">
+        <div class="stat-card accent"><div class="stat-label">RFQs em aberto</div><div class="stat-value" id="stat-rfqs-open">3</div><div class="stat-sub">Aguardando cotação</div></div>
+        <div class="stat-card" style="cursor:pointer;transition:box-shadow .15s" onmouseenter="this.style.boxShadow='0 4px 12px rgba(0,0,0,.12)'" onmouseleave="this.style.boxShadow=''" onclick="openPendingModal()"><div class="stat-label">Cotações pendentes</div><div class="stat-value" id="stat-cotas-pend">0</div><div class="stat-sub" style="color:var(--info)">Clique para ver →</div></div>
+        <div class="stat-card"><div class="stat-label">Fechadas</div><div class="stat-value" id="stat-confirmadas">0</div><div class="stat-sub">Este período</div></div>
+        <div class="stat-card"><div class="stat-label">Perdidas</div><div class="stat-value" id="stat-perdidas">0</div><div class="stat-sub">Este período</div></div>
+      </div>
+
+      <!-- Charts -->
+      <div id="dash-charts"></div>
+
+      <!-- Recent RFQs + Activity -->
+      <div class="dash-grid" style="margin-top:16px">
+        <div class="table-wrap">
+          <div class="table-header"><h3>RFQs recentes</h3><button class="btn btn-ghost btn-sm" onclick="nav('rfqs')">Ver todos →</button></div>
+          <table>
+            <thead><tr><th>Cliente</th><th>Produto</th><th>Volume</th><th>Status</th></tr></thead>
+            <tbody id="dash-rfq-body"></tbody>
+          </table>
+        </div>
+        <div class="detail-card">
+          <h4>Atividade recente</h4>
+          <div id="dash-activity"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RFQs -->
+    <div class="panel" id="panel-rfqs">
+      <div class="table-wrap">
+        <div class="table-header">
+          <h3>Pedidos de cotação (RFQs)</h3>
+          <select class="produto-filter" id="filter-rfqs-produto" onchange="filterRFQs(document.querySelector('#panel-rfqs .search-box input').value)">
+            <option value="">Todos os produtos</option>
+            <option>Compensado</option><option>Lâminas</option><option>Outros</option>
+            <option>Painéis</option><option>Portas</option><option>Serrada</option>
+          </select>
+          <div class="search-box"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><input type="text" placeholder="Buscar..." oninput="filterRFQs(this.value)"></div>
+          <button class="btn btn-primary btn-sm" onclick="openModal('modal-rfq')">+ Novo RFQ</button>
+        </div>
+        <table>
+          <thead><tr><th>Ref</th><th>Cliente / País</th><th>Produto / Espécie</th><th>Medidas</th><th>Volume / Unidade</th><th>Target</th><th>Incoterm</th><th>Responsável</th><th>Ações</th></tr></thead>
+          <tbody id="rfq-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- COTAÇÕES -->
+    <div class="panel" id="panel-cotacoes">
+      <div class="table-wrap">
+          <div class="table-header">
+            <h3>RFQs em cotação</h3>
+            <select class="produto-filter" id="filter-cotas-produto" onchange="renderCotacoes()">
+              <option value="">Todos os produtos</option>
+              <option>Compensado</option><option>Lâminas</option><option>Outros</option>
+              <option>Painéis</option><option>Portas</option><option>Serrada</option>
+            </select>
+          </div>
+          <table>
+            <thead><tr><th>Nº RFQ</th><th>Data</th><th>Produto</th><th>Importador</th><th>Esp.(mm)</th><th>Larg.(mm)</th><th>Comp.(mm)</th><th>Qualidade</th><th>Volume</th><th style="text-align:center">Cotar/Editar</th><th style="text-align:center">Enviar</th><th>Detalhes / Editar RFQ / Del</th></tr></thead>
+            <tbody id="cotas-rfq-body"></tbody>
+          </table>
+        </div>
+      <!-- hidden body for supplier offers still used by JS -->
+      <table style="display:none"><tbody id="cotas-body"></tbody></table>
+    </div>
+
+    <!-- PROPOSTAS -->
+    <div class="panel" id="panel-propostas">
+      <div class="table-wrap">
+        <div class="table-header">
+          <h3>Propostas e acompanhamento</h3>
+          <select class="produto-filter" id="filter-prop-produto" onchange="renderPropostas()">
+            <option value="">Todos os produtos</option>
+            <option>Compensado</option><option>Lâminas</option><option>Outros</option>
+            <option>Painéis</option><option>Portas</option><option>Serrada</option>
+          </select>
+          <button class="btn btn-primary btn-sm" onclick="openModal('modal-proposta')">+ Nova proposta</button>
+        </div>
+        <table>
+          <thead><tr><th>RFQ</th><th>Cliente</th><th>Produto</th><th>Incoterm</th><th>Preço final</th><th>Volume</th><th>Data</th><th>Status</th><th>Ações</th></tr></thead>
+          <tbody id="prop-body"></tbody>
+        </table>
+      </div>
+      <div style="margin-top:20px">
+        <div class="detail-card">
+          <h4>Calculadora de incoterms</h4>
+          <div class="form-grid" style="margin-top:12px">
+            <div class="field"><label>Preço FOB (U$/m³)</label><input type="number" id="calc-fob" value="290" oninput="calcIncoterms()"></div>
+            <div class="field"><label>Volume (m³)</label><input type="number" id="calc-vol" value="80" oninput="calcIncoterms()"></div>
+            <div class="field"><label>Frete (U$/m³)</label><input type="number" id="calc-frete" value="25" oninput="calcIncoterms()"></div>
+            <div class="field"><label>Seguro (% sobre FOB)</label><input type="number" id="calc-seguro" value="0.5" step="0.1" oninput="calcIncoterms()"></div>
+            <div class="field"><label>Margem broker</label><input type="number" id="calc-margem" value="8" oninput="calcIncoterms()"></div>
+            <div class="field"><label>Tipo de margem</label>
+              <select id="calc-margem-tipo" onchange="calcIncoterms()"><option value="pct">% sobre FOB</option><option value="usd">USD/m³</option></select>
+            </div>
+          </div>
+          <div style="margin-top:16px">
+            <div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);font-family:var(--mono);margin-bottom:8px">Preço por incoterm (U$/m³)</div>
+            <div class="incoterm-grid" id="incoterm-results"></div>
+          </div>
+          <div style="margin-top:12px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;font-size:12px;color:var(--text2)">
+            <strong style="color:var(--text);display:block;margin-bottom:4px">Comissão estimada</strong>
+            <span id="calc-comissao-txt">—</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- OFERTAS DO MERCADO -->
+    <div class="panel" id="panel-mercado">
+      <div class="table-wrap">
+        <div class="table-header">
+          <h3>Ofertas do mercado</h3>
+          <select class="produto-filter" id="filter-mercado-produto" onchange="renderMercado()">
+            <option value="">Todos os produtos</option>
+            <option>Compensado</option><option>Lâminas</option><option>Outros</option>
+            <option>Painéis</option><option>Portas</option><option>Serrada</option>
+          </select>
+          <button class="btn btn-primary btn-sm" onclick="openModal('modal-mercado')">+ Nova oferta</button>
+        </div>
+        <table>
+          <thead><tr><th>Ref</th><th>Data</th><th>Produto</th><th>Fornecedor</th><th>Esp.(mm)</th><th>Larg.(mm)</th><th>Comp.(mm)</th><th>Qualidade</th><th>Volume</th><th>Preço FOB</th><th>Clientes Ofertados</th><th>Ações</th></tr></thead>
+          <tbody id="mercado-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- RESUMO DAS COTAÇÕES -->
+    <div class="panel" id="panel-resumo">
+      <div class="table-wrap">
+        <div class="table-header">
+          <h3>Resumo das cotações</h3>
+          <select class="produto-filter" id="filter-resumo-produto" onchange="renderResumo()">
+            <option value="">Todos os produtos</option>
+            <option>Compensado</option><option>Lâminas</option><option>Outros</option>
+            <option>Painéis</option><option>Portas</option><option>Serrada</option>
+          </select>
+          <div style="font-size:12px;color:var(--text2);font-family:var(--mono)">
+            <span style="display:inline-block;width:12px;height:12px;background:#F59E0B;border-radius:2px;vertical-align:middle;margin-right:4px"></span>Pendente
+            <span style="display:inline-block;width:12px;height:12px;background:var(--accent);border-radius:2px;vertical-align:middle;margin:0 4px 0 12px"></span>Fechado
+            <span style="display:inline-block;width:12px;height:12px;background:var(--danger);border-radius:2px;vertical-align:middle;margin:0 4px 0 12px"></span>Perdido
+          </div>
+        </div>
+        <table>
+          <thead><tr><th>Nº RFQ</th><th>Data</th><th>Fornecedor</th><th>Importador</th><th>Produto</th><th>Esp.(mm)</th><th>Larg.(mm)</th><th>Comp.(mm)</th><th>Volume</th><th>Unidade</th><th>Comentário</th><th>Ações</th></tr></thead>
+          <tbody id="resumo-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- FORNECEDORES -->
+    <div class="panel" id="panel-fornecedores">
+      <div style="display:flex;justify-content:flex-end;margin-bottom:16px">
+        <button class="btn btn-primary btn-sm" onclick="openModal('modal-fornecedor')">+ Novo fornecedor</button>
+      </div>
+      <div class="supplier-cards" id="supplier-cards"></div>
+    </div>
+
+  </div>
+</div>
+</div>
+
+<!-- ════════════════════ MODAL: Novo RFQ ════════════════════ -->
+<div class="modal-overlay" id="modal-rfq">
+  <div class="modal" style="max-width:740px">
+    <div class="modal-head">
+      <h2>Novo pedido de cotação (RFQ)</h2>
+      <button class="btn-icon" onclick="closeModal('modal-rfq')">✕</button>
+    </div>
+    <div class="modal-body">
+      <!-- AI Box -->
+      <div class="ai-box">
+        <div class="ai-box-label">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+          Preenchimento automático com IA
+        </div>
+        <textarea id="ai-raw" placeholder="Cole aqui o pedido do cliente (WhatsApp, e-mail, etc.) e clique em Interpretar.&#10;&#10;Ex: &quot;Hi, we need 80cbm of Ipe 50x150x3000mm FAS grade, CFR Shanghai, target USD 310/cbm. Please quote asap.&quot;"></textarea>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:8px">
+          <button class="ai-btn" id="ai-btn" onclick="parseAI()">Interpretar com IA</button>
+          <div class="ai-status" id="ai-status"></div>
+        </div>
+      </div>
+
+      <div class="form-grid">
+        <div class="section-divider">Cliente</div>
+        <div class="field"><label>Empresa cliente</label><input type="text" id="rfq-cliente" placeholder="Ex: Chen Trading Ltd"></div>
+        <div class="field"><label>País</label><input type="text" id="rfq-pais" placeholder="Ex: China"></div>
+        <div class="field"><label>Canal de entrada</label>
+          <select id="rfq-canal"><option>WhatsApp</option><option>E-mail</option><option>Outro</option></select>
+        </div>
+        <div class="field">
+          <label>Responsável</label>
+          <input type="text" id="rfq-resp" placeholder="Digite o nome..." list="resp-sugg" autocomplete="off">
+          <datalist id="resp-sugg"><option value="Carlos"><option value="Marina"><option value="Rafael"></datalist>
+          <div class="hint">Digite livremente ou escolha da lista</div>
+        </div>
+
+        <div class="section-divider">Produto</div>
+        <div class="field">
+          <label>Categoria de produto</label>
+          <select id="rfq-produto">
+            <option value="">— selecione —</option>
+            <option>Compensado</option>
+            <option>Lâminas</option>
+            <option>Outros</option>
+            <option>Painéis</option>
+            <option>Portas</option>
+            <option>Serrada</option>
+          </select>
+        </div>
+        <div class="field"><label>Espécie / Descrição</label><input type="text" id="rfq-especie" placeholder="Ex: Ipê, Garapa, MDF, Jatobá…"></div>
+        <div class="field"><label>Acabamento</label>
+          <select id="rfq-acabamento"><option>Serrado (S2S)</option><option>Aplainado (S4S)</option><option>Bruto</option><option>Fresado</option></select>
+        </div>
+        <div class="field"><label>Incoterm solicitado</label>
+          <select id="rfq-incoterm"><option>FOB</option><option>CFR</option><option>CIF</option><option>DAP</option><option>EXW</option></select>
+        </div>
+        <div class="field form-full"><label>País de destino</label><input type="text" id="rfq-porto-dest" placeholder="Ex: Holanda, China, Chile, EUA"></div>
+
+        <div class="section-divider">
+          Medidas e volumes
+          <span style="font-size:10px;color:var(--text3);font-weight:400;text-transform:none;letter-spacing:0;margin-left:8px">Adicione uma ou mais linhas</span>
+        </div>
+        <div class="form-full">
+          <table class="dims-table">
+            <thead>
+              <tr>
+                <th style="width:14%">Esp.(mm)</th>
+                <th style="width:14%">Larg.(mm)</th>
+                <th style="width:16%">Comp.(mm)</th>
+                <th style="width:22%">Qualidade</th>
+                <th style="width:12%">Volume</th>
+                <th style="width:18%">Unidade</th>
+                <th style="width:4%"></th>
+              </tr>
+            </thead>
+            <tbody id="dims-body"></tbody>
+          </table>
+          <button class="add-dim-btn" onclick="addDimRow({})">+ Adicionar medida</button>
+        </div>
+
+        <div class="section-divider">Preço e observações</div>
+        <div class="field"><label>Preço target (U$/m³)</label><input type="number" id="rfq-target" placeholder="Deixe vazio se não informado"></div>
+        <div class="field"><label>Moeda / unidade</label>
+          <select id="rfq-moeda"><option>USD/m³</option><option>USD/MBF</option><option>EUR/m³</option></select>
+        </div>
+        <div class="field form-full"><label>Certificados requeridos</label><input type="text" id="rfq-certs" placeholder="Ex: FSC, IBAMA, PEFC, CARB…"></div>
+        <div class="field form-full"><label>Observações</label><textarea id="rfq-obs" placeholder="Embalagem, prazo de entrega, condições especiais..."></textarea></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-rfq')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveRFQ()">Salvar RFQ</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════ MODAL: Cotação ════════════════════ -->
+<div class="modal-overlay" id="modal-cotacao">
+  <div class="modal">
+    <div class="modal-head"><h2>Registrar oferta de fornecedor</h2><button class="btn-icon" onclick="closeModal('modal-cotacao')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="field"><label>RFQ relacionado</label><select id="cot-rfq"></select></div>
+        <div class="field"><label>Fornecedor</label><select id="cot-forn"></select></div>
+        <div class="field"><label>Preço FOB (U$/m³)</label><input type="number" id="cot-preco" placeholder="Ex: 290"></div>
+        <div class="field"><label>Volume disponível</label><input type="number" id="cot-vol" placeholder="Ex: 80"></div>
+        <div class="field"><label>Unidade de volume</label>
+          <select id="cot-vol-unit"><option>m³</option><option>containers 20'</option><option>containers 40'</option><option>pés tabule (MBF)</option></select>
+        </div>
+        <div class="field"><label>Certificados</label><input type="text" id="cot-certs" placeholder="Ex: FSC, IBAMA, PEFC…"></div>
+        <div class="field"><label>Margem broker</label><input type="number" id="cot-margem" placeholder="Ex: 8" step="0.01"></div>
+        <div class="field"><label>Tipo de margem</label>
+          <select id="cot-margem-tipo"><option value="pct">% sobre FOB</option><option value="usd">USD/m³</option></select>
+        </div>
+        <div class="field"><label>Porto de embarque</label><input type="text" id="cot-porto" placeholder="Ex: Itajaí"></div>
+        <div class="field"><label>Mês/Ano de embarque</label><input type="month" id="cot-prazo" placeholder=""></div>
+        <div class="field"><label>Validade da oferta</label><input type="date" id="cot-validade"></div>
+        <div class="field"><label>Resposta</label>
+          <select id="cot-status"><option value="sim">Sim — pode fornecer</option><option value="nao">Não — recusou</option><option value="aguardo">Aguardando</option></select>
+        </div>
+        <div class="field form-full"><label>Observações</label><textarea id="cot-obs" placeholder="Dimensões disponíveis, certificações, condições especiais..."></textarea></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-cotacao')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveCotacao()">Salvar oferta</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════ MODAL: Proposta ════════════════════ -->
+<div class="modal-overlay" id="modal-proposta">
+  <div class="modal">
+    <div class="modal-head"><h2>Montar e enviar proposta</h2><button class="btn-icon" onclick="closeModal('modal-proposta')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="field"><label>RFQ / Cliente</label><select id="prop-rfq" onchange="propRFQChanged()"></select></div>
+        <div class="field"><label>Fornecedor selecionado</label><select id="prop-forn"></select></div>
+        <div class="field"><label>Preço FOB base (U$/m³)</label><input type="number" id="prop-fob" placeholder="290" oninput="calcProp()"></div>
+        <div class="field"><label>Margem broker</label><input type="number" id="prop-margem" value="8" oninput="calcProp()"></div>
+        <div class="field"><label>Tipo de margem</label>
+          <select id="prop-margem-tipo" onchange="calcProp()"><option value="pct">% sobre FOB</option><option value="usd">USD/m³</option></select>
+        </div>
+        <div class="field"><label>Frete (U$/m³)</label><input type="number" id="prop-frete" value="0" oninput="calcProp()"></div>
+        <div class="field"><label>Seguro (U$/m³)</label><input type="number" id="prop-seguro" value="0" oninput="calcProp()"></div>
+        <div class="field"><label>Incoterm ofertado</label>
+          <select id="prop-incoterm" onchange="calcProp()"><option>FOB</option><option>CFR</option><option>CIF</option><option>DAP</option><option>EXW</option></select>
+        </div>
+        <div class="field"><label>Preço final calculado</label>
+          <input type="text" id="prop-final" readonly style="background:var(--accent-bg);color:var(--accent);font-family:var(--mono);font-weight:500">
+        </div>
+        <div class="field"><label>Volume (m³)</label><input type="number" id="prop-vol" placeholder="80" oninput="calcProp()"></div>
+        <div class="field"><label>Canal de envio</label>
+          <select id="prop-canal"><option>WhatsApp</option><option>E-mail</option><option>Ambos</option></select>
+        </div>
+        <div class="field"><label>Validade da proposta</label><input type="date" id="prop-validade"></div>
+        <div class="field form-full"><label>Observações para o cliente</label><textarea id="prop-obs" placeholder="Condições de pagamento, certificações, prazo de embarque..."></textarea></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-proposta')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveProposta()">Enviar proposta</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════ MODAL: Follow-up ════════════════════ -->
+<div class="modal-overlay" id="modal-followup">
+  <div class="modal" style="max-width:500px">
+    <div class="modal-head"><h2>Acompanhamento da proposta</h2><button class="btn-icon" onclick="closeModal('modal-followup')">✕</button></div>
+    <div class="modal-body">
+      <div id="fu-prop-info" style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;margin-bottom:16px;font-size:13px;line-height:1.6"></div>
+      <div style="font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;font-family:var(--mono);margin-bottom:8px">Qual foi o resultado?</div>
+      <div class="fu-opts">
+        <div class="fu-opt won" id="fu-opt-won" onclick="selectFU('won')">
+          <div class="fu-icon">🌲</div>
+          <div class="fu-title">Negócio fechado</div>
+          <div class="fu-desc">Cliente aceitou a proposta</div>
+        </div>
+        <div class="fu-opt lost" id="fu-opt-lost" onclick="selectFU('lost')">
+          <div class="fu-icon">✗</div>
+          <div class="fu-title">Negócio perdido</div>
+          <div class="fu-desc">Cliente não avançou</div>
+        </div>
+      </div>
+      <div class="fu-reason" id="fu-reason-won">
+        <div class="form-grid" style="grid-template-columns:1fr">
+          <div class="field"><label>Valor final negociado (U$/m³)</label><input type="number" id="fu-val-final" placeholder="Valor acordado"></div>
+          <div class="field"><label>Observações do fechamento</label><textarea id="fu-obs-won" placeholder="PO recebida, condições acordadas, prazo de embarque..."></textarea></div>
+        </div>
+      </div>
+      <div class="fu-reason" id="fu-reason-lost">
+        <div class="form-grid" style="grid-template-columns:1fr">
+          <div class="field"><label>Motivo da perda</label>
+            <select id="fu-motivo">
+              <option value="">Selecione o motivo...</option>
+              <option>Preço acima do mercado</option>
+              <option>Cliente encontrou fornecedor direto</option>
+              <option>Especificação não disponível</option>
+              <option>Prazo de entrega incompatível</option>
+              <option>Cliente cancelou projeto</option>
+              <option>Certificação não disponível</option>
+              <option>Concorrência de outro broker</option>
+              <option>Outro</option>
+            </select>
+          </div>
+          <div class="field"><label>Detalhes / notas</label><textarea id="fu-obs-lost" placeholder="O que poderia ter sido diferente? Preço do concorrente?..."></textarea></div>
+        </div>
+      </div>
+      <div id="fu-neg-box" style="display:none;margin-top:4px">
+        <div class="form-grid" style="grid-template-columns:1fr">
+          <div class="field"><label>Nota de acompanhamento</label><textarea id="fu-note" placeholder="Atualização da negociação, próximo passo..."></textarea></div>
+          <div class="field"><label>Próximo contato</label><input type="date" id="fu-next"></div>
+        </div>
+      </div>
+      <button class="btn btn-secondary btn-sm" style="margin-top:12px" onclick="selectFU('negotiating')" id="fu-btn-neg">Ainda em negociação</button>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-followup')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveFollowup()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════ MODAL: Fornecedor ════════════════════ -->
+<div class="modal-overlay" id="modal-fornecedor">
+  <div class="modal">
+    <div class="modal-head"><h2>Cadastrar fornecedor</h2><button class="btn-icon" onclick="closeModal('modal-fornecedor')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="field"><label>Razão social / Nome</label><input type="text" id="forn-nome" placeholder="Ex: Madeireira Becker Ltda"></div>
+        <div class="field"><label>Estado</label><input type="text" id="forn-estado" placeholder="Ex: SC"></div>
+        <div class="field"><label>Porto de embarque</label><input type="text" id="forn-porto" placeholder="Ex: Itajaí"></div>
+        <div class="field"><label>Contato principal</label><input type="text" id="forn-contato" placeholder="Nome do contato"></div>
+        <div class="field"><label>WhatsApp</label><input type="text" id="forn-whatsapp" placeholder="+55 47 99999-9999"></div>
+        <div class="field"><label>E-mail</label><input type="email" id="forn-email" placeholder="contato@empresa.com.br"></div>
+        <div class="field form-full"><label>Produtos / Espécies</label><input type="text" id="forn-produtos" placeholder="Ex: Ipê, Garapa, Compensado"></div>
+        <div class="field form-full"><label>Certificações</label><input type="text" id="forn-certs" placeholder="Ex: FSC, PEFC, IBAMA"></div>
+        <div class="field form-full"><label>Observações</label><textarea id="forn-obs" placeholder="Volume mínimo, condições especiais..."></textarea></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-fornecedor')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveFornecedor()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════ MODAL: Editar Cotação ════════════════════ -->
+<div class="modal-overlay" id="modal-edit-cotacao">
+  <div class="modal">
+    <div class="modal-head"><h2>Editar oferta de fornecedor</h2><button class="btn-icon" onclick="closeModal('modal-edit-cotacao')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="field"><label>RFQ relacionado</label><select id="ec-rfq"></select></div>
+        <div class="field"><label>Fornecedor</label><select id="ec-forn"></select></div>
+        <div class="field"><label>Preço FOB (U$/m³)</label><input type="number" id="ec-preco" placeholder="Ex: 290"></div>
+        <div class="field"><label>Volume disponível</label><input type="number" id="ec-vol" placeholder="Ex: 80"></div>
+        <div class="field"><label>Unidade de volume</label>
+          <select id="ec-vol-unit"><option>m³</option><option>containers 20'</option><option>containers 40'</option><option>pés tabule (MBF)</option></select>
+        </div>
+        <div class="field"><label>Certificados</label><input type="text" id="ec-certs" placeholder="Ex: FSC, IBAMA, PEFC…"></div>
+        <div class="field"><label>Margem broker</label><input type="number" id="ec-margem" placeholder="Ex: 8" step="0.01"></div>
+        <div class="field"><label>Tipo de margem</label>
+          <select id="ec-margem-tipo"><option value="pct">% sobre FOB</option><option value="usd">USD/m³</option></select>
+        </div>
+        <div class="field"><label>Porto de embarque</label><input type="text" id="ec-porto" placeholder="Ex: Itajaí"></div>
+        <div class="field"><label>Mês/Ano de embarque</label><input type="month" id="ec-prazo"></div>
+        <div class="field"><label>Validade da oferta</label><input type="date" id="ec-validade"></div>
+        <div class="field"><label>Resposta</label>
+          <select id="ec-status"><option value="sim">Sim — pode fornecer</option><option value="nao">Não — recusou</option><option value="aguardo">Aguardando</option></select>
+        </div>
+        <div class="field form-full"><label>Observações</label><textarea id="ec-obs"></textarea></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-edit-cotacao')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveEditCotacao()">Salvar alterações</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════ MODAL: Oferta do Mercado ════════════════════ -->
+<div class="modal-overlay" id="modal-mercado">
+  <div class="modal" style="max-width:740px">
+    <div class="modal-head"><h2>Nova oferta do mercado</h2><button class="btn-icon" onclick="closeModal('modal-mercado')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="section-divider">Produto e fornecedor</div>
+        <div class="field"><label>Fornecedor</label><input type="text" id="mkt-fornecedor" placeholder="Nome do fornecedor"></div>
+        <div class="field"><label>Categoria de produto</label>
+          <select id="mkt-produto">
+            <option value="">— selecione —</option>
+            <option>Compensado</option><option>Lâminas</option><option>Outros</option>
+            <option>Painéis</option><option>Portas</option><option>Serrada</option>
+          </select>
+        </div>
+        <div class="field form-full"><label>Espécie / Descrição</label><input type="text" id="mkt-especie" placeholder="Ex: Ipê, Garapa, MDF..."></div>
+
+        <div class="section-divider">Dimensões</div>
+        <div class="field"><label>Espessura (mm)</label><input type="number" id="mkt-esp" placeholder="50"></div>
+        <div class="field"><label>Largura (mm)</label><input type="number" id="mkt-larg" placeholder="150"></div>
+        <div class="field"><label>Comprimento (mm)</label><input type="number" id="mkt-comp" placeholder="3000"></div>
+        <div class="field"><label>Qualidade</label><input type="text" id="mkt-qual" placeholder="FAS, A/BB..." list="ql-list"></div>
+        <div class="field"><label>Volume</label><input type="text" id="mkt-vol" placeholder="Ex: 80 m³"></div>
+        <div class="field"><label>Preço FOB (U$/m³)</label><input type="number" id="mkt-preco" placeholder="Ex: 290"></div>
+        <div class="field"><label>Porto embarque</label><input type="text" id="mkt-porto" placeholder="Ex: Itajaí"></div>
+        <div class="field"><label>Validade</label><input type="date" id="mkt-validade"></div>
+
+        <div class="section-divider">Clientes ofertados</div>
+        <div class="field form-full">
+          <label>Clientes (um por linha ou separados por vírgula)</label>
+          <textarea id="mkt-clientes" placeholder="Ex: Chen Trading, Euro Lumber BV, Maderas Pacífico"></textarea>
+        </div>
+        <div class="field form-full"><label>Observações</label><textarea id="mkt-obs" placeholder="Certificações, condições especiais..."></textarea></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-mercado')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveMercado()">Salvar oferta</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════ MODAL: Cotar RFQ ════════════════════ -->
+<div class="modal-overlay" id="modal-cotar">
+  <div class="modal" style="max-width:900px;width:95vw">
+    <div class="modal-head">
+      <h2 id="modal-cotar-title">Cotação</h2>
+      <button class="btn-icon" onclick="closeModal('modal-cotar')">✕</button>
+    </div>
+    <div class="modal-body" style="padding:0">
+      <div class="split-panel" style="min-height:400px">
+        <!-- LEFT: RFQ details -->
+        <div class="split-left" id="cotar-rfq-details"></div>
+        <!-- RIGHT: Multi-supplier quote form -->
+        <div class="split-right" style="overflow-y:auto;max-height:80vh">
+          <div class="split-title right">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+            Fornecedores cotados
+          </div>
+          <div id="mc-suppliers-container"></div>
+          <button class="add-dim-btn" style="margin-top:10px;width:100%;justify-content:center" onclick="addSupplierBlock()">
+            + Adicionar outro fornecedor
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-cotar')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveModalCotacao()">Salvar todas as cotações</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════ MODAL: Cotações Pendentes ════════════════════ -->
+<div class="modal-overlay" id="modal-pending">
+  <div class="modal" style="max-width:820px">
+    <div class="modal-head">
+      <h2>Cotações pendentes</h2>
+      <button class="btn-icon" onclick="closeModal('modal-pending')">✕</button>
+    </div>
+    <div class="modal-body" style="padding:0">
+      <div id="pending-list"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-pending')">Fechar</button>
+      <button class="btn btn-primary" onclick="closeModal('modal-pending');nav('cotacoes')">Ir para Cotações →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════ MODAL: Comentário ════════════════════ -->
+<div class="modal-overlay" id="modal-comment">
+  <div class="modal" style="max-width:460px">
+    <div class="modal-head"><h2>Comentário</h2><button class="btn-icon" onclick="closeModal('modal-comment')">✕</button></div>
+    <div class="modal-body">
+      <div id="comment-view" style="display:none;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:14px;font-size:13px;line-height:1.6;color:var(--text);white-space:pre-wrap;min-height:80px"></div>
+      <div id="comment-edit">
+        <div class="field"><label>Texto do comentário</label><textarea id="comment-text" style="min-height:120px" placeholder="Descreva o andamento, motivo, condições..."></textarea></div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <button class="btn btn-ghost btn-sm" onclick="toggleCommentView()">👁 Visualizar / Editar</button>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-comment')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveComment()">Salvar comentário</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════ MODAL: Detalhes RFQ (Resumo) ════════════════════ -->
+<div class="modal-overlay" id="modal-resumo-detail">
+  <div class="modal" style="max-width:660px">
+    <div class="modal-head">
+      <h2 id="resumo-detail-title">Detalhes do RFQ</h2>
+      <button class="btn-icon" onclick="closeModal('modal-resumo-detail')">✕</button>
+    </div>
+    <div class="modal-body" id="resumo-detail-body"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-resumo-detail')">Fechar</button>
+      <button class="btn btn-primary" id="resumo-detail-edit-btn">✎ Editar RFQ</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- ════════════════════ MODAL: Editar RFQ ════════════════════ -->
+<div class="modal-overlay" id="modal-edit-rfq">
+  <div class="modal" style="max-width:740px">
+    <div class="modal-head">
+      <h2>Editar RFQ <span id="edit-rfq-id-label" style="font-size:14px;color:var(--text3);font-weight:300;font-style:italic"></span></h2>
+      <button class="btn-icon" onclick="closeModal('modal-edit-rfq')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="section-divider">Cliente</div>
+        <div class="field"><label>Empresa cliente</label><input type="text" id="edit-rfq-cliente"></div>
+        <div class="field"><label>País</label><input type="text" id="edit-rfq-pais"></div>
+        <div class="field"><label>Canal de entrada</label>
+          <select id="edit-rfq-canal"><option>WhatsApp</option><option>E-mail</option><option>Outro</option></select>
+        </div>
+        <div class="field">
+          <label>Responsável</label>
+          <input type="text" id="edit-rfq-resp" list="resp-sugg2" autocomplete="off">
+          <datalist id="resp-sugg2"><option value="Carlos"><option value="Marina"><option value="Rafael"></datalist>
+        </div>
+        <div class="section-divider">Produto</div>
+        <div class="field">
+          <label>Categoria de produto</label>
+          <select id="edit-rfq-produto">
+            <option value="">— selecione —</option>
+            <option>Compensado</option><option>Lâminas</option><option>Outros</option>
+            <option>Painéis</option><option>Portas</option><option>Serrada</option>
+          </select>
+        </div>
+        <div class="field"><label>Espécie / Descrição</label><input type="text" id="edit-rfq-especie"></div>
+        <div class="field"><label>Acabamento</label>
+          <select id="edit-rfq-acabamento"><option>Serrado (S2S)</option><option>Aplainado (S4S)</option><option>Bruto</option><option>Fresado</option></select>
+        </div>
+        <div class="field"><label>Incoterm solicitado</label>
+          <select id="edit-rfq-incoterm"><option>FOB</option><option>CFR</option><option>CIF</option><option>DAP</option><option>EXW</option></select>
+        </div>
+        <div class="field form-full"><label>País de destino</label><input type="text" id="edit-rfq-porto-dest" placeholder="Ex: Holanda, China, Chile, EUA"></div>
+        <div class="section-divider">Medidas e volumes</div>
+        <div class="form-full">
+          <table class="dims-table">
+            <thead><tr>
+              <th style="width:14%">Esp.(mm)</th><th style="width:14%">Larg.(mm)</th><th style="width:16%">Comp.(mm)</th>
+              <th style="width:22%">Qualidade</th><th style="width:12%">Volume</th><th style="width:18%">Unidade</th><th style="width:4%"></th>
+            </tr></thead>
+            <tbody id="edit-dims-body"></tbody>
+          </table>
+          <button class="add-dim-btn" onclick="addEditDimRow({})">+ Adicionar medida</button>
+        </div>
+        <div class="section-divider">Preço e status</div>
+        <div class="field"><label>Preço target (U$/m³)</label><input type="number" id="edit-rfq-target"></div>
+        <div class="field"><label>Status</label>
+          <select id="edit-rfq-status">
+            <option value="novo">Novo</option>
+            <option value="quoting">Cotando</option>
+            <option value="proposta">Proposta enviada</option>
+            <option value="negotiating">Negociando</option>
+            <option value="fechado">Fechado</option>
+            <option value="lost">Perdido</option>
+          </select>
+        </div>
+        <div class="field form-full"><label>Certificados requeridos</label><input type="text" id="edit-rfq-certs" placeholder="Ex: FSC, IBAMA, PEFC…"></div>
+        <div class="field form-full"><label>Observações</label><textarea id="edit-rfq-obs"></textarea></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-edit-rfq')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveEditRFQ()">Salvar alterações</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════ MODAL: Editar Proposta ════════════════════ -->
+<div class="modal-overlay" id="modal-edit-prop">
+  <div class="modal">
+    <div class="modal-head">
+      <h2>Editar proposta</h2>
+      <button class="btn-icon" onclick="closeModal('modal-edit-prop')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="field"><label>RFQ / Cliente</label><select id="ep-rfq"></select></div>
+        <div class="field"><label>Fornecedor</label><select id="ep-forn"></select></div>
+        <div class="field"><label>Preço FOB base (U$/m³)</label><input type="number" id="ep-fob" oninput="calcEditProp()"></div>
+        <div class="field"><label>Margem broker</label><input type="number" id="ep-margem" oninput="calcEditProp()"></div>
+        <div class="field"><label>Tipo de margem</label>
+          <select id="ep-margem-tipo" onchange="calcEditProp()"><option value="pct">% sobre FOB</option><option value="usd">USD/m³</option></select>
+        </div>
+        <div class="field"><label>Frete (U$/m³)</label><input type="number" id="ep-frete" oninput="calcEditProp()"></div>
+        <div class="field"><label>Seguro (U$/m³)</label><input type="number" id="ep-seguro" oninput="calcEditProp()"></div>
+        <div class="field"><label>Incoterm ofertado</label>
+          <select id="ep-incoterm" onchange="calcEditProp()"><option>FOB</option><option>CFR</option><option>CIF</option><option>DAP</option><option>EXW</option></select>
+        </div>
+        <div class="field"><label>Preço final calculado</label>
+          <input type="text" id="ep-final" readonly style="background:var(--accent-bg);color:var(--accent);font-family:var(--mono);font-weight:500">
+        </div>
+        <div class="field"><label>Volume (m³)</label><input type="number" id="ep-vol" oninput="calcEditProp()"></div>
+        <div class="field"><label>Canal de envio</label>
+          <select id="ep-canal"><option>WhatsApp</option><option>E-mail</option><option>Ambos</option></select>
+        </div>
+        <div class="field"><label>Status</label>
+          <select id="ep-status">
+            <option value="sent">Enviada</option>
+            <option value="negotiating">Negociando</option>
+            <option value="fechado">Fechado</option>
+            <option value="lost">Perdido</option>
+          </select>
+        </div>
+        <div class="field"><label>Data</label><input type="date" id="ep-data"></div>
+        <div class="field form-full"><label>Observações</label><textarea id="ep-obs"></textarea></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-edit-prop')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveEditProp()">Salvar alterações</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════ MODAL: Confirmar exclusão ════════════════════ -->
+<div class="modal-overlay" id="modal-confirm-del">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-head">
+      <h2>Confirmar exclusão</h2>
+      <button class="btn-icon" onclick="closeModal('modal-confirm-del')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="display:flex;gap:14px;align-items:flex-start">
+        <div style="width:40px;height:40px;border-radius:50%;background:var(--danger-bg);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:20px">⚠</div>
+        <div>
+          <div style="font-size:15px;font-weight:500;margin-bottom:6px" id="del-title">Excluir registro</div>
+          <div style="font-size:13px;color:var(--text2)" id="del-desc">Esta ação não pode ser desfeita.</div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-confirm-del')">Cancelar</button>
+      <button class="btn btn-danger" id="del-confirm-btn" onclick="confirmDelete()">Excluir</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════
+var S = {
+  rfqs: [
+    {id:'rfq-001',data:'2025-05-08',produto:'Serrada',cliente:'Chen Trading Ltd',pais:'China',especie:'Ipê',dims:[{esp:'50',larg:'150',comp:'3000',qualidade:'FAS',vol:'80',unidade:'m³'}],target:'310',incoterm:'CFR',porto_dest:'Shanghai',canal:'WhatsApp',resp:'Carlos',acabamento:'Serrado (S2S)',moeda:'USD/m³',obs:'',status:'quoting'},
+    {id:'rfq-002',data:'2025-05-15',produto:'Compensado',cliente:'Euro Lumber BV',pais:'Holanda',especie:'Compensado',dims:[{esp:'18',larg:'1220',comp:'2440',qualidade:'A/BB',vol:'2',unidade:"containers 40'"}],target:'',incoterm:'CIF',porto_dest:'Rotterdam',canal:'E-mail',resp:'Marina',acabamento:'',moeda:'USD/m³',obs:'FSC obrigatório',status:'novo'},
+    {id:'rfq-003',data:'2025-05-20',produto:'Serrada',cliente:'Maderas Pacífico',pais:'Chile',especie:'Garapa',dims:[{esp:'25',larg:'150',comp:'4000',qualidade:'Select / Clear',vol:'120',unidade:'m³'},{esp:'50',larg:'100',comp:'3000',qualidade:'FAS',vol:'40',unidade:'m³'}],target:'290',incoterm:'CFR',porto_dest:'Valparaíso',canal:'WhatsApp',resp:'Rafael',acabamento:'Aplainado (S4S)',moeda:'USD/m³',obs:'',status:'proposta'},
+  ],
+  deletedIds: [],
+  cotacoes: [
+    {rfq:'rfq-001',fornecedor:'Madeireira Becker',preco:'290',vol:'80 m³',porto:'Itajaí',prazo:'45 dias',validade:'',status:'sim',obs:''},
+    {rfq:'rfq-001',fornecedor:'Serrana Madeiras',preco:'298',vol:'60 m³',porto:'Paranaguá',prazo:'60 dias',validade:'',status:'sim',obs:''},
+    {rfq:'rfq-001',fornecedor:'Florestal Sul',preco:'',vol:'',porto:'',prazo:'',validade:'',status:'aguardo',obs:''},
+    {rfq:'rfq-003',fornecedor:'Madeireira Becker',preco:'275',vol:'160 m³',porto:'Itajaí',prazo:'30 dias',validade:'',status:'sim',obs:''},
+  ],
+  propostas: [
+    {rfq:'rfq-003',fornecedor:'Madeireira Becker',fob:275,margem:8,frete:22,seguro:1.5,incoterm:'CIF',final:319.65,vol:160,canal:'WhatsApp',data:'2024-01-15',status:'negotiating',obs:'',followup:{outcome:'',motivo:'',obs:'',valorFinal:'',nextContact:''}},
+  ],
+  fornecedores: [
+    {nome:'Madeireira Becker Ltda',estado:'SC',porto:'Itajaí',contato:'Sandro Becker',whatsapp:'+55 47 99812-3344',email:'vendas@becker.com.br',produtos:'Ipê, Garapa, Jatobá, Cumaru',certs:'IBAMA, FSC',obs:''},
+    {nome:'Serrana Madeiras',estado:'PR',porto:'Paranaguá',contato:'Fábio Serrano',whatsapp:'+55 41 99654-7788',email:'fabio@serrana.com.br',produtos:'Ipê, Cedro, Peroba',certs:'IBAMA',obs:''},
+    {nome:'Florestal Sul',estado:'RS',porto:'Porto Alegre',contato:'Ana Luz',whatsapp:'+55 51 99321-6655',email:'ana@florestalsul.com.br',produtos:'Garapeira, Louro, Angelim',certs:'IBAMA, PEFC',obs:''},
+    {nome:'Ita Compensados',estado:'SP',porto:'Santos',contato:'Marcos Ita',whatsapp:'+55 11 97777-0011',email:'marcos@itacomp.com.br',produtos:'Compensado naval, madeirado',certs:'FSC, CARB',obs:''},
+  ],
+  fuIdx: null,
+  fuOutcome: null,
+  resumo: [],
+};
+
+// ══════════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════════
+function nav(page) {
+  document.querySelectorAll('.nav-item').forEach(function(el){ el.classList.remove('active'); });
+  var ni = document.getElementById('nav-' + page);
+  if (ni) ni.classList.add('active');
+  document.querySelectorAll('.panel').forEach(function(el){ el.classList.remove('active'); });
+  var panel = document.getElementById('panel-' + page);
+  if (panel) panel.classList.add('active');
+  var titles = {
+    dashboard: 'Dashboard <span>— visão geral</span>',
+    rfqs: 'RFQs <span>— pedidos de cotação</span>',
+    cotacoes: 'Cotações <span>— ofertas de fornecedores</span>',
+    propostas: 'Propostas <span>— acompanhamento</span>',
+    resumo: 'Resumo das Cotações <span>— acompanhamento</span>',
+    mercado: 'Ofertas do Mercado <span>— estoque de fornecedores</span>',
+    fornecedores: 'Fornecedores <span>— cadastro</span>'
+  };
+  document.getElementById('topbar-title').innerHTML = titles[page] || page;
+  if (page === 'dashboard') renderDashboard();
+  if (page === 'rfqs') renderRFQs();
+  if (page === 'rfqs') renderRFQs();
+  if (page === 'cotacoes') renderCotacoes();
+  if (page === 'propostas') { renderPropostas(); calcIncoterms(); }
+  if (page === 'fornecedores') renderFornecedores();
+  if (page === 'mercado') renderMercado();
+  if (page === 'resumo') renderResumo();
+  if (page === 'dashboard') renderDashboard();
+  updateBadges();
+}
+
+// ══════════════════════════════════════════
+// MODALS
+// ══════════════════════════════════════════
+function openModal(id) {
+  if (id === 'modal-rfq') { initDims(); clearRFQForm(); }
+  if (id === 'modal-cotacao') populateCotSelects();
+  if (id === 'modal-proposta') { populatePropSelects(); calcProp(); }
+  document.getElementById(id).classList.add('open');
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+// Close on backdrop click
+document.querySelectorAll('.modal-overlay').forEach(function(el){
+  el.addEventListener('click', function(e){ if (e.target === this) this.classList.remove('open'); });
+});
+
+// ══════════════════════════════════════════
+// TOAST
+// ══════════════════════════════════════════
+function toast(msg, type) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.background = type === 'danger' ? 'var(--danger)' : type === 'gold' ? '#8B6914' : 'var(--accent)';
+  t.classList.add('show');
+  setTimeout(function(){ t.classList.remove('show'); }, 3000);
+}
+
+// ══════════════════════════════════════════
+// DIMS ROWS
+// ══════════════════════════════════════════
+var UNITS = ['m³', "containers 20'", "containers 40'", 'pés tabule (MBF)'];
+function initDims() {
+  document.getElementById('dims-body').innerHTML = '';
+  addDimRow({});
+}
+function addDimRow(d) {
+  d = d || {};
+  var tb = document.getElementById('dims-body');
+  var tr = document.createElement('tr');
+  var unitOpts = UNITS.map(function(u){
+    return '<option value="' + u + '"' + (u === (d.unidade || 'm³') ? ' selected' : '') + '>' + u + '</option>';
+  }).join('');
+  tr.innerHTML = '<td><input type="number" placeholder="50" value="' + (d.esp||'') + '" class="d-esp"></td>' +
+    '<td><input type="number" placeholder="150" value="' + (d.larg||'') + '" class="d-larg"></td>' +
+    '<td><input type="number" placeholder="3000" value="' + (d.comp||'') + '" class="d-comp"></td>' +
+    '<td><input type="text" placeholder="FAS, A/BB…" value="' + (d.qualidade||'') + '" class="d-qual" list="ql-list"></td>' +
+    '<td><input type="number" placeholder="80" value="' + (d.vol||'') + '" class="d-vol"></td>' +
+    '<td><select class="d-unit">' + unitOpts + '</select></td>' +
+    '<td><button class="rm-btn" onclick="this.closest(\'tr\').remove()" title="Remover">×</button></td>';
+  tb.appendChild(tr);
+}
+function getDims() {
+  return Array.from(document.querySelectorAll('#dims-body tr')).map(function(tr){
+    return {
+      esp: tr.querySelector('.d-esp').value,
+      larg: tr.querySelector('.d-larg').value,
+      comp: tr.querySelector('.d-comp').value,
+      qualidade: tr.querySelector('.d-qual').value,
+      vol: tr.querySelector('.d-vol').value,
+      unidade: tr.querySelector('.d-unit').value,
+    };
+  }).filter(function(d){ return d.esp || d.vol; });
+}
+// Datalist for quality suggestions
+(function(){
+  var dl = document.createElement('datalist');
+  dl.id = 'ql-list';
+  ['Select / Clear','FAS','F1F','#2 Common','A/B','C/D','A/BB','B/BB','WBP','MR','CP','Externo','Interno'].forEach(function(q){
+    var o = document.createElement('option'); o.value = q; dl.appendChild(o);
+  });
+  document.body.appendChild(dl);
+})();
+
+// ══════════════════════════════════════════
+// CLEAR RFQ FORM
+// ══════════════════════════════════════════
+function clearRFQForm() {
+  ['rfq-cliente','rfq-pais','rfq-porto-dest','rfq-target','rfq-obs','rfq-certs'].forEach(function(id){
+    var el = document.getElementById(id); if(el) el.value = '';
+  });
+  document.getElementById('rfq-resp').value = '';
+  document.getElementById('rfq-produto').value = '';
+  document.getElementById('rfq-especie').value = '';
+  document.getElementById('ai-raw').value = '';
+  var st = document.getElementById('ai-status');
+  st.style.display = 'none'; st.textContent = '';
+  var btn = document.getElementById('ai-btn');
+  btn.disabled = false; btn.textContent = 'Interpretar com IA';
+}
+
+// ══════════════════════════════════════════
+// AI PARSE
+// ══════════════════════════════════════════
+async function parseAI() {
+  var raw = document.getElementById('ai-raw').value.trim();
+  if (!raw) { toast('Cole o texto do pedido antes de interpretar', 'gold'); return; }
+  var btn = document.getElementById('ai-btn');
+  var st = document.getElementById('ai-status');
+  btn.disabled = true; btn.textContent = 'Analisando...';
+  st.style.display = 'block'; st.style.color = 'var(--info)'; st.textContent = 'Enviando para a IA...';
+
+  var prompt = 'You are a timber export broker assistant. Extract structured data from this wood purchase inquiry. Return ONLY a valid JSON object with these fields (use empty string if not found):\n{\n  "cliente": "buyer company name",\n  "pais": "buyer country",\n  "especie": "wood species or product in Portuguese if possible",\n  "dims": [{"esp":"thickness mm","larg":"width mm","comp":"length mm","qualidade":"grade/quality","vol":"volume number","unidade":"m3 or containers 20 or containers 40"}],\n  "target": "price USD/m3 number only, empty if not mentioned",\n  "incoterm": "FOB or CFR or CIF or DAP or EXW",\n  "porto_dest": "destination port city",\n  "obs": "other notes"\n}\nReturn ONLY the JSON, no markdown, no explanation.\n\nMessage: ' + raw;
+
+  try {
+    var resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    var data = await resp.json();
+    var text = (data.content || []).filter(function(b){ return b.type === 'text'; }).map(function(b){ return b.text; }).join('');
+    var clean = text.replace(/```json|```/g,'').trim();
+    var p = JSON.parse(clean);
+
+    if (p.cliente) document.getElementById('rfq-cliente').value = p.cliente;
+    if (p.pais) document.getElementById('rfq-pais').value = p.pais;
+    if (p.especie) document.getElementById('rfq-especie').value = p.especie;
+    if (p.target) document.getElementById('rfq-target').value = p.target;
+    if (p.porto_dest) document.getElementById('rfq-porto-dest').value = p.porto_dest;
+    if (p.obs) document.getElementById('rfq-obs').value = p.obs;
+    if (p.incoterm) {
+      var sel = document.getElementById('rfq-incoterm');
+      Array.from(sel.options).forEach(function(o){ if (o.value === p.incoterm) o.selected = true; });
+    }
+    if (p.dims && p.dims.length) {
+      document.getElementById('dims-body').innerHTML = '';
+      p.dims.forEach(function(d){
+        // normalize unidade
+        var u = (d.unidade||'m³').toLowerCase();
+        if (u.indexOf("40") >= 0) d.unidade = "containers 40'";
+        else if (u.indexOf("20") >= 0) d.unidade = "containers 20'";
+        else if (u.indexOf("mbf") >= 0) d.unidade = "pés tabule (MBF)";
+        else d.unidade = 'm³';
+        addDimRow(d);
+      });
+    }
+    st.style.color = 'var(--accent)';
+    st.textContent = '✓ Campos preenchidos — revise e ajuste se necessário';
+    toast('RFQ interpretado com sucesso');
+  } catch(e) {
+    st.style.color = 'var(--danger)';
+    st.textContent = 'Erro ao interpretar. Verifique o texto e tente novamente.';
+  }
+  btn.disabled = false; btn.textContent = 'Interpretar novamente';
+}
+
+// ══════════════════════════════════════════
+// SAVE RFQ
+// ══════════════════════════════════════════
+function saveRFQ() {
+  // New RFQ gets next available number (max existing + 1)
+  var max = S.rfqs.reduce(function(m, r){ var n = parseInt(r.id.replace('rfq-',''),10); return n > m ? n : m; }, 0);
+  var id = 'rfq-' + String(max + 1).padStart(3,'0');
+  var dims = getDims();
+  var r = {
+    id: id,
+    data: new Date().toISOString().split('T')[0],
+    cliente: document.getElementById('rfq-cliente').value || 'Sem nome',
+    pais: document.getElementById('rfq-pais').value || '',
+    produto: document.getElementById('rfq-produto').value || '',
+    especie: document.getElementById('rfq-especie').value || '',
+    dims: dims.length ? dims : [{esp:'',larg:'',comp:'',qualidade:'',vol:'',unidade:'m³'}],
+    target: document.getElementById('rfq-target').value || '',
+    moeda: document.getElementById('rfq-moeda').value,
+    incoterm: document.getElementById('rfq-incoterm').value,
+    porto_dest: document.getElementById('rfq-porto-dest').value || '',
+    canal: document.getElementById('rfq-canal').value,
+    resp: document.getElementById('rfq-resp').value || '—',
+    acabamento: document.getElementById('rfq-acabamento').value,
+    obs: document.getElementById('rfq-obs').value,
+    certs: document.getElementById('rfq-certs').value || '',
+    status: 'quoting',
+  };
+  S.rfqs.unshift(r);
+  closeModal('modal-rfq');
+  nav('cotacoes');
+  toast('RFQ ' + id + ' registrado — redirecionando para Cotações');
+}
+
+// ══════════════════════════════════════════
+// RENDER RFQs
+// ══════════════════════════════════════════
+var SL = {novo:'badge-new',quoting:'badge-quoting',proposta:'badge-pending',negotiating:'badge-negotiating',fechado:'badge-closed',lost:'badge-lost'};
+var ST = {novo:'novo',quoting:'cotando',proposta:'proposta',negotiating:'negociando',fechado:'fechado',lost:'perdido'};
+
+function renderRFQs(filter) {
+  filter = (filter || '').toLowerCase();
+  var prodFilter = (document.getElementById('filter-rfqs-produto') || {}).value || '';
+  var list = S.rfqs.filter(function(r){
+    var matchText = !filter || r.cliente.toLowerCase().indexOf(filter) >= 0 || (r.especie||'').toLowerCase().indexOf(filter) >= 0;
+    var matchProd = !prodFilter || r.produto === prodFilter;
+    return matchText && matchProd;
+  });
+  var tb = document.getElementById('rfq-body');
+  if (!list.length) { tb.innerHTML = '<tr class="empty-row"><td colspan="9">Nenhum RFQ encontrado</td></tr>'; return; }
+  tb.innerHTML = list.map(function(r){
+    var dimSum = r.dims.map(function(d){ return [d.esp,d.larg,d.comp].filter(Boolean).join('×') + (d.esp ? 'mm' : ''); }).filter(Boolean).join(', ') || '—';
+    var volSum = r.dims.map(function(d){ return d.vol ? d.vol + ' ' + d.unidade : ''; }).filter(Boolean).join(' + ') || '—';
+    var idx = S.rfqs.indexOf(r);
+    var dateFmt = r.data ? r.data.split('-').reverse().join('/') : '';
+    return '<tr><td style="font-family:var(--mono);font-size:12px;white-space:nowrap">' + r.id + (dateFmt ? '<br><span style="font-size:10px;color:var(--text3)">' + dateFmt + '</span>' : '') + '</td>' +
+      '<td><strong>' + r.cliente + '</strong><br><span style="color:var(--text3);font-size:11px">' + r.pais + '</span></td>' +
+      '<td>' + (r.produto || '<span style="color:var(--text3)">—</span>') + (r.especie ? '<br><span style="font-size:11px;color:var(--text2)">' + r.especie + '</span>' : '') + '</td>' +
+      '<td style="font-family:var(--mono);font-size:11px">' + dimSum + '</td>' +
+      '<td style="font-family:var(--mono);font-size:11px">' + volSum + '</td>' +
+      '<td style="font-family:var(--mono)">' + (r.target ? 'U$ ' + r.target + '/m³' : '<span style="color:var(--text3)">n/i</span>') + '</td>' +
+      '<td><span class="chip">' + r.incoterm + '</span></td>' +
+      '<td>' + r.resp + '</td>' +
+      '<td style="white-space:nowrap">' +
+        '<button class="btn btn-secondary btn-sm" style="margin-right:4px" onclick="openEditRFQ(' + idx + ')">✎ Editar</button>' +
+        '<button class="btn btn-sm" style="background:var(--danger-bg);color:var(--danger);border:1px solid #e8b4b4" onclick="askDelete(\'rfq\',' + idx + ',\'' + r.id + ' — ' + r.cliente.replace(/'/g,"\\'") + '\')">✕</button>' +
+      '</td></tr>';
+  }).join('');
+}
+function filterRFQs(v){ renderRFQs(v); }
+
+function renderDashRFQs() {
+  var tb = document.getElementById('dash-rfq-body');
+  if (!tb) return;
+  var list = S.rfqs.slice(0, 5);
+  tb.innerHTML = list.map(function(r){
+    var vol = (r.dims[0] && r.dims[0].vol) ? r.dims[0].vol + ' ' + r.dims[0].unidade : '—';
+    return '<tr onclick="nav(\'rfqs\')">' +
+      '<td><strong>' + r.cliente + '</strong><br><span style="color:var(--text3);font-size:11px">' + r.pais + '</span></td>' +
+      '<td style="font-family:var(--mono);font-size:12px">' + (r.especie||'—') + '</td>' +
+      '<td style="font-family:var(--mono);font-size:12px">' + vol + '</td>' +
+      '<td><span class="badge ' + (SL[r.status]||'badge-new') + '">' + (ST[r.status]||r.status) + '</span></td></tr>';
+  }).join('');
+  renderActivity();
+}
+
+function renderActivity() {
+  var el = document.getElementById('dash-activity');
+  if (!el) return;
+
+  var events = [];
+  var rfqMap = {};
+  S.rfqs.forEach(function(r){ rfqMap[r.id] = r; });
+  var today = new Date().toISOString().split('T')[0];
+
+  // RFQ creation events
+  S.rfqs.forEach(function(r){
+    var d = r.data || today;
+    var dotClass = r.status === 'quoting' ? 'active' : 'done';
+    var note = [r.especie, r.dims && r.dims[0] ? (r.dims[0].esp && r.dims[0].larg ? r.dims[0].esp + '×' + r.dims[0].larg + 'mm' : '') : '', r.dims && r.dims[0] && r.dims[0].vol ? r.dims[0].vol + ' ' + r.dims[0].unidade : ''].filter(Boolean).join(' · ');
+    events.push({ date: d, dotClass: dotClass, title: 'RFQ registrado — ' + r.cliente, sub: r.resp || '', note: note });
+  });
+
+  // Cotação events
+  S.cotacoes.forEach(function(c){
+    var rfq = rfqMap[c.rfq];
+    var d = rfq ? (rfq.data || today) : today;
+    if (c.status === 'sim' && c.preco) {
+      var dotClass = 'done';
+      var note = 'FOB ' + (c.porto || '') + ' U$ ' + c.preco + '/m³';
+      events.push({ date: d, dotClass: dotClass, title: 'Oferta recebida — ' + c.fornecedor, sub: '', note: note });
+    }
+  });
+
+  // Proposta events
+  S.propostas.forEach(function(p){
+    var rfq = rfqMap[p.rfq];
+    var d = p.data || today;
+    var dotMap = { sent: 'done', negotiating: 'active', fechado: 'done', lost: 'done' };
+    var titleMap = { sent: 'Proposta enviada', negotiating: 'Em negociação', fechado: 'Negócio fechado 🌲', lost: 'Negócio perdido' };
+    var dotClass = dotMap[p.status] || 'done';
+    var title = (titleMap[p.status] || 'Proposta') + ' — ' + (rfq ? rfq.cliente : p.rfq);
+    var note = p.incoterm + ' U$ ' + parseFloat(p.final).toFixed(2) + '/m³ · ' + p.vol + ' m³';
+    events.push({ date: d, dotClass: dotClass, title: title, sub: p.canal || '', note: note });
+  });
+
+  // Sort descending by date
+  events.sort(function(a, b){ return b.date.localeCompare(a.date); });
+
+  var shown = events.slice(0, 6);
+  if (!shown.length) { el.innerHTML = '<div style="font-size:13px;color:var(--text3);font-style:italic">Nenhuma atividade registrada</div>'; return; }
+
+  el.innerHTML = shown.map(function(e, i){
+    var isLast = i === shown.length - 1;
+    var dateFmt = e.date ? e.date.split('-').reverse().join('/') : '';
+    return '<div class="tl-item" style="' + (isLast ? 'padding-bottom:0' : '') + '">' +
+      '<div class="tl-dot ' + e.dotClass + '"></div>' +
+      '<div>' +
+        '<div class="tl-title">' + e.title + '</div>' +
+        '<div class="tl-time">' + dateFmt + (e.sub ? ' · ' + e.sub : '') + '</div>' +
+        (e.note ? '<div class="tl-note">' + e.note + '</div>' : '') +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+// ══════════════════════════════════════════
+// COTAÇÕES
+// ══════════════════════════════════════════
+function populateCotSelects() {
+  document.getElementById('cot-rfq').innerHTML = S.rfqs.map(function(r){ return '<option value="' + r.id + '">' + r.id + ' — ' + r.cliente + '</option>'; }).join('');
+  document.getElementById('cot-forn').innerHTML = S.fornecedores.map(function(f){ return '<option>' + f.nome + '</option>'; }).join('');
+}
+function saveCotacao() {
+  S.cotacoes.push({
+    rfq: document.getElementById('cot-rfq').value,
+    fornecedor: document.getElementById('cot-forn').value,
+    preco: document.getElementById('cot-preco').value,
+    vol: document.getElementById('cot-vol').value,
+    vol_unit: document.getElementById('cot-vol-unit').value,
+    certs: document.getElementById('cot-certs').value,
+    margem: document.getElementById('cot-margem').value,
+    margem_tipo: document.getElementById('cot-margem-tipo').value,
+    vol: document.getElementById('cot-vol').value,
+    porto: document.getElementById('cot-porto').value,
+    prazo: document.getElementById('cot-prazo').value,
+    validade: document.getElementById('cot-validade').value,
+    status: document.getElementById('cot-status').value,
+    obs: document.getElementById('cot-obs').value,
+  });
+  closeModal('modal-cotacao');
+  renderCotacoes(); updateBadges(); renderDashRFQs();
+  toast('Oferta registrada com sucesso');
+}
+function renderCotacoes() {
+  var rfqTb = document.getElementById('cotas-rfq-body');
+  if (!rfqTb) return;
+
+  var prodFilter = (document.getElementById('filter-cotas-produto') || {}).value || '';
+  var filteredRFQs = prodFilter ? S.rfqs.filter(function(r){ return r.produto === prodFilter; }) : S.rfqs;
+
+  if (!filteredRFQs.length) {
+    rfqTb.innerHTML = '<tr class="empty-row"><td colspan="12">Nenhum RFQ registrado</td></tr>';
+    // still update hidden cotas-body
+    var tb2 = document.getElementById('cotas-body');
+    if (tb2) tb2.innerHTML = '';
+    return;
+  }
+
+  rfqTb.innerHTML = filteredRFQs.map(function(r){
+    var dateFmt = r.data ? r.data.split('-').reverse().join('/') : '—';
+    var dims = (r.dims && r.dims.length) ? r.dims : [{esp:'',larg:'',comp:'',qualidade:'',vol:'',unidade:'m³'}];
+    var globalIdx = S.rfqs.indexOf(r);
+    var cotado = S.cotacoes.some(function(c){ return c.rfq === r.id; });
+    var rowClass = cotado ? 'row-quoted-cot' : 'row-pending-cot';
+
+    // Cotar/Edit icon button
+    var cotarIcon = cotado
+      ? '<button class="icon-btn icon-btn-cotar-on" title="Editar cotação / adicionar fornecedores" onclick="openCotarModal(\'' + r.id + '\')">' +
+          '<svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>' +
+        '</button>'
+      : '<button class="icon-btn icon-btn-cotar-off" title="Clique para cotar" onclick="openCotarModal(\'' + r.id + '\')">' +
+          '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>' +
+        '</button>';
+
+    // Detail view button
+    var detailIcon = '<button class="icon-btn" title="Ver detalhes do RFQ e cotação" onclick="openCotacaoDetail(\'' + r.id + '\')" style="background:var(--surface2);border:1.5px solid var(--border2);color:var(--text2)" onmouseenter="this.style.background=\'var(--accent-bg)\';this.style.color=\'var(--accent)\'" onmouseleave="this.style.background=\'var(--surface2)\';this.style.color=\'var(--text2)\'">' +
+      '<svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>' +
+    '</button>';
+
+    // Enviar icon button (arrow)
+    var enviado = r.enviado;
+    var sendIcon = enviado
+      ? '<button class="icon-btn icon-btn-send-on" title="Enviado ao cliente">' +
+          '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>' +
+        '</button>'
+      : '<button class="icon-btn icon-btn-send-off" title="Clique para marcar como enviado" onclick="toggleEnviar(\'' + r.id + '\')" id="btn-enviar-' + r.id + '">' +
+          '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>' +
+        '</button>';
+
+    return dims.map(function(d, di){
+      var volTxt = d.vol ? d.vol + ' ' + d.unidade : '—';
+      if (di === 0) {
+        return '<tr class="' + rowClass + '">' +
+          '<td style="font-family:var(--mono);font-size:12px;white-space:nowrap" rowspan="' + dims.length + '">' + r.id + '<br><span style="font-size:10px;opacity:.7">' + dateFmt + '</span></td>' +
+          '<td style="font-family:var(--mono);font-size:12px" rowspan="' + dims.length + '">' + dateFmt + '</td>' +
+          '<td rowspan="' + dims.length + '">' + (r.produto||'—') + '</td>' +
+          '<td rowspan="' + dims.length + '"><strong>' + r.cliente + '</strong></td>' +
+          '<td style="font-family:var(--mono);font-size:12px">' + (d.esp||'—') + '</td>' +
+          '<td style="font-family:var(--mono);font-size:12px">' + (d.larg||'—') + '</td>' +
+          '<td style="font-family:var(--mono);font-size:12px">' + (d.comp||'—') + '</td>' +
+          '<td style="font-size:12px">' + (d.qualidade||'—') + '</td>' +
+          '<td style="font-family:var(--mono);font-size:12px">' + volTxt + '</td>' +
+          '<td style="text-align:center" rowspan="' + dims.length + '">' + cotarIcon + '</td>' +
+          '<td style="text-align:center" rowspan="' + dims.length + '">' + sendIcon + '</td>' +
+          '<td style="white-space:nowrap" rowspan="' + dims.length + '">' +
+            detailIcon +
+            '<button class="btn btn-secondary btn-sm" style="margin-left:4px;margin-right:4px" onclick="openEditRFQ(' + globalIdx + ')">✎ RFQ</button>' +
+            '<button class="btn btn-sm" style="background:#FEE2E2;color:#DC2626;border:1px solid #FCA5A5" onclick="askDelete(\'rfq\',' + globalIdx + ',\'' + r.id + ' — ' + r.cliente.replace(/'/g,"\\'") + '\')">✕</button>' +
+          '</td>' +
+          '</tr>';
+      } else {
+        return '<tr class="' + rowClass + '">' +
+          '<td style="font-family:var(--mono);font-size:12px">' + (d.esp||'—') + '</td>' +
+          '<td style="font-family:var(--mono);font-size:12px">' + (d.larg||'—') + '</td>' +
+          '<td style="font-family:var(--mono);font-size:12px">' + (d.comp||'—') + '</td>' +
+          '<td style="font-size:12px">' + (d.qualidade||'—') + '</td>' +
+          '<td style="font-family:var(--mono);font-size:12px">' + volTxt + '</td>' +
+          '</tr>';
+      }
+    }).join('');
+  }).join('');
+
+  // update hidden cotas-body (used by JS references elsewhere)
+  var tb = document.getElementById('cotas-body');
+  if (tb) tb.innerHTML = '';
+}
+
+// ══════════════════════════════════════════
+// PROPOSTAS
+// ══════════════════════════════════════════
+function populatePropSelects() {
+  document.getElementById('prop-rfq').innerHTML = S.rfqs.map(function(r){ return '<option value="' + r.id + '">' + r.id + ' — ' + r.cliente + '</option>'; }).join('');
+  document.getElementById('prop-forn').innerHTML = S.fornecedores.map(function(f){ return '<option>' + f.nome + '</option>'; }).join('');
+}
+function propRFQChanged() {
+  var rfqId = document.getElementById('prop-rfq').value;
+  var cotas = S.cotacoes.filter(function(c){ return c.rfq === rfqId && c.status === 'sim' && c.preco; });
+  if (cotas.length) {
+    document.getElementById('prop-fob').value = cotas[0].preco;
+    if (cotas[0].margem) {
+      document.getElementById('prop-margem').value = cotas[0].margem;
+      setSelectVal('prop-margem-tipo', cotas[0].margem_tipo || 'pct');
+    }
+    calcProp();
+  }
+}
+function calcProp() {
+  var fob = parseFloat(document.getElementById('prop-fob').value) || 0;
+  var margem = parseFloat(document.getElementById('prop-margem').value) || 0;
+  var tipo = document.getElementById('prop-margem-tipo').value;
+  var frete = parseFloat(document.getElementById('prop-frete').value) || 0;
+  var seg = parseFloat(document.getElementById('prop-seguro').value) || 0;
+  var inc = document.getElementById('prop-incoterm').value;
+  var base = tipo === 'usd' ? fob + margem : fob * (1 + margem / 100);
+  if (['CFR','CIF','DAP'].indexOf(inc) >= 0) base += frete;
+  if (['CIF','DAP'].indexOf(inc) >= 0) base += seg;
+  document.getElementById('prop-final').value = 'U$ ' + base.toFixed(2) + '/m³';
+}
+function saveProposta() {
+  var fob = parseFloat(document.getElementById('prop-fob').value) || 0;
+  var margem = parseFloat(document.getElementById('prop-margem').value) || 0;
+  var tipo = document.getElementById('prop-margem-tipo').value;
+  var frete = parseFloat(document.getElementById('prop-frete').value) || 0;
+  var seg = parseFloat(document.getElementById('prop-seguro').value) || 0;
+  var inc = document.getElementById('prop-incoterm').value;
+  var final = tipo === 'usd' ? fob + margem : fob * (1 + margem / 100);
+  if (['CFR','CIF','DAP'].indexOf(inc) >= 0) final += frete;
+  if (['CIF','DAP'].indexOf(inc) >= 0) final += seg;
+  var rfqId = document.getElementById('prop-rfq').value;
+  S.propostas.unshift({
+    rfq: rfqId,
+    fornecedor: document.getElementById('prop-forn').value,
+    fob: fob, margem: margem, margem_tipo: tipo, frete: frete, seguro: seg,
+    incoterm: inc, final: final, vol: parseFloat(document.getElementById('prop-vol').value) || 0,
+    canal: document.getElementById('prop-canal').value,
+    data: new Date().toISOString().split('T')[0],
+    status: 'sent', obs: document.getElementById('prop-obs').value,
+    followup: { outcome:'', motivo:'', obs:'', valorFinal:'', nextContact:'' },
+  });
+  var rfq = S.rfqs.find(function(r){ return r.id === rfqId; });
+  if (rfq) rfq.status = 'proposta';
+  closeModal('modal-proposta');
+  renderPropostas(); renderRFQs(); renderDashRFQs(); updateBadges();
+  toast('Proposta enviada — ' + inc + ' U$ ' + final.toFixed(2) + '/m³');
+}
+function renderPropostas() {
+  var tb = document.getElementById('prop-body');
+  var rfqMap = {};
+  S.rfqs.forEach(function(r){ rfqMap[r.id] = r; });
+  var prodFilter = (document.getElementById('filter-prop-produto') || {}).value || '';
+  var list = S.propostas.filter(function(p){
+    if (!prodFilter) return true;
+    var rfq = rfqMap[p.rfq];
+    return rfq && rfq.produto === prodFilter;
+  });
+  if (!list.length) { tb.innerHTML = '<tr class="empty-row"><td colspan="9">Nenhuma proposta encontrada</td></tr>'; return; }
+  var sm = {new:'badge-new',sent:'badge-sent',negotiating:'badge-negotiating',fechado:'badge-closed',lost:'badge-lost'};
+  var tx = {new:'novo',sent:'enviada',negotiating:'negociando',fechado:'fechado',lost:'perdido'};
+  tb.innerHTML = list.map(function(p, i){
+    var realIdx = S.propostas.indexOf(p);
+    var rfq = rfqMap[p.rfq];
+    var st = p.status || 'sent';
+    var canUpdate = st === 'new' || st === 'sent' || st === 'negotiating';
+    var extra = '';
+    if (st === 'fechado' && p.followup && p.followup.valorFinal) extra = '<br><span style="font-size:11px;color:var(--closed)">U$ ' + p.followup.valorFinal + '/m³ acordado</span>';
+    if (st === 'lost' && p.followup && p.followup.motivo) extra = '<br><span style="font-size:11px;color:var(--danger)">' + p.followup.motivo + '</span>';
+    var actionBtn = canUpdate
+      ? '<button class="btn btn-secondary btn-sm" onclick="openFollowup(' + realIdx + ')">Atualizar</button>'
+      : (st === 'fechado' ? '<span style="font-size:12px;color:var(--closed)">✓ Fechado</span>' : '<span style="font-size:12px;color:var(--danger)">✗ Perdido</span>');
+    return '<tr>' +
+      '<td style="font-family:var(--mono);font-size:12px">' + p.rfq + '</td>' +
+      '<td>' + (rfq ? rfq.cliente : '—') + '</td>' +
+      '<td>' + (rfq ? (rfq.produto || '—') : '—') + '</td>' +
+      '<td><span class="chip">' + p.incoterm + '</span></td>' +
+      '<td style="font-family:var(--mono);color:var(--accent);font-weight:500">U$ ' + parseFloat(p.final).toFixed(2) + '/m³</td>' +
+      '<td style="font-family:var(--mono)">' + p.vol + ' m³</td>' +
+      '<td style="font-family:var(--mono);font-size:12px">' + p.data + '</td>' +
+      '<td><span class="badge ' + (sm[st]||'badge-sent') + '">' + (tx[st]||st) + '</span>' + extra + '</td>' +
+      '<td style="white-space:nowrap;display:flex;gap:4px;align-items:center">' + actionBtn +
+        ' <button class="btn btn-secondary btn-sm" onclick="openEditProp(' + realIdx + ')">✎</button>' +
+        ' <button class="btn btn-sm" style="background:var(--danger-bg);color:var(--danger);border:1px solid #e8b4b4" onclick="askDelete(\'prop\',' + realIdx + ',\'Proposta ' + p.rfq + ' — ' + (rfq ? rfq.cliente.replace(/'/g,"\\'") : '') + '\')">✕</button>' +
+      '</td></tr>';
+  }).join('');
+}
+
+// ══════════════════════════════════════════
+// FOLLOW-UP
+// ══════════════════════════════════════════
+function openFollowup(idx) {
+  S.fuIdx = idx; S.fuOutcome = null;
+  var p = S.propostas[idx];
+  var rfq = S.rfqs.find(function(r){ return r.id === p.rfq; });
+  document.getElementById('fu-prop-info').innerHTML =
+    '<strong>' + (rfq ? rfq.cliente : p.rfq) + '</strong> · ' + (rfq ? rfq.especie : '') +
+    ' · <span style="font-family:var(--mono)">U$ ' + parseFloat(p.final).toFixed(2) + '/' + p.incoterm + '</span> · ' + p.vol + ' m³' +
+    '<br><span style="font-size:11px;color:var(--text2)">Enviada em ' + p.data + ' via ' + p.canal + '</span>';
+  document.getElementById('fu-opt-won').classList.remove('sel');
+  document.getElementById('fu-opt-lost').classList.remove('sel');
+  document.getElementById('fu-reason-won').classList.remove('show');
+  document.getElementById('fu-reason-lost').classList.remove('show');
+  document.getElementById('fu-neg-box').style.display = 'none';
+  document.getElementById('fu-val-final').value = '';
+  document.getElementById('fu-obs-won').value = '';
+  document.getElementById('fu-obs-lost').value = '';
+  document.getElementById('fu-note').value = '';
+  openModal('modal-followup');
+}
+function selectFU(outcome) {
+  S.fuOutcome = outcome;
+  document.getElementById('fu-opt-won').classList.remove('sel');
+  document.getElementById('fu-opt-lost').classList.remove('sel');
+  document.getElementById('fu-reason-won').classList.remove('show');
+  document.getElementById('fu-reason-lost').classList.remove('show');
+  document.getElementById('fu-neg-box').style.display = 'none';
+  if (outcome === 'won') { document.getElementById('fu-opt-won').classList.add('sel'); document.getElementById('fu-reason-won').classList.add('show'); }
+  else if (outcome === 'lost') { document.getElementById('fu-opt-lost').classList.add('sel'); document.getElementById('fu-reason-lost').classList.add('show'); }
+  else if (outcome === 'negotiating') { document.getElementById('fu-neg-box').style.display = 'block'; }
+}
+function saveFollowup() {
+  if (S.fuIdx === null) return;
+  var outcome = S.fuOutcome;
+  if (!outcome) { toast('Selecione o resultado antes de salvar', 'gold'); return; }
+  var p = S.propostas[S.fuIdx];
+  var rfq = S.rfqs.find(function(r){ return r.id === p.rfq; });
+  if (outcome === 'won') {
+    p.status = 'fechado';
+    p.followup = { outcome:'won', valorFinal: document.getElementById('fu-val-final').value, obs: document.getElementById('fu-obs-won').value, motivo:'', nextContact:'' };
+    if (rfq) rfq.status = 'fechado';
+    toast('Negócio fechado! 🌲 ' + (rfq ? rfq.cliente : ''));
+  } else if (outcome === 'lost') {
+    p.status = 'lost';
+    p.followup = { outcome:'lost', motivo: document.getElementById('fu-motivo').value, obs: document.getElementById('fu-obs-lost').value, valorFinal:'', nextContact:'' };
+    if (rfq) rfq.status = 'lost';
+    toast('Registro de perda salvo', 'danger');
+  } else {
+    p.status = 'negotiating';
+    p.followup = { outcome:'negotiating', obs: document.getElementById('fu-note').value, motivo:'', valorFinal:'', nextContact: document.getElementById('fu-next').value };
+    toast('Acompanhamento atualizado');
+  }
+  closeModal('modal-followup');
+  renderPropostas(); renderRFQs(); renderDashRFQs(); updateBadges();
+}
+
+// ══════════════════════════════════════════
+// FORNECEDORES
+// ══════════════════════════════════════════
+function renderFornecedores() {
+  var c = document.getElementById('supplier-cards');
+  c.innerHTML = S.fornecedores.map(function(f){
+    var tags = f.produtos.split(',').map(function(p){ return '<span class="sup-tag">' + p.trim() + '</span>'; }).join('');
+    return '<div class="sup-card">' +
+      '<div class="sup-card-name">' + f.nome + '</div>' +
+      '<div class="sup-card-loc">' + f.estado + ' · Porto: ' + f.porto + '</div>' +
+      '<div class="sup-tags">' + tags + '</div>' +
+      (f.certs ? '<div style="font-size:11px;color:var(--accent);margin-bottom:8px;font-family:var(--mono)">' + f.certs + '</div>' : '') +
+      '<div style="font-size:12px;color:var(--text2)">' + f.contato + '</div>' +
+      '<div style="font-size:12px;color:var(--text3)">' + f.whatsapp + '</div></div>';
+  }).join('');
+}
+function saveFornecedor() {
+  S.fornecedores.push({
+    nome: document.getElementById('forn-nome').value || 'Sem nome',
+    estado: document.getElementById('forn-estado').value,
+    porto: document.getElementById('forn-porto').value,
+    contato: document.getElementById('forn-contato').value,
+    whatsapp: document.getElementById('forn-whatsapp').value,
+    email: document.getElementById('forn-email').value,
+    produtos: document.getElementById('forn-produtos').value,
+    certs: document.getElementById('forn-certs').value,
+    obs: document.getElementById('forn-obs').value,
+  });
+  closeModal('modal-fornecedor');
+  renderFornecedores();
+  toast('Fornecedor cadastrado com sucesso');
+}
+
+// ══════════════════════════════════════════
+// CALCULATOR
+// ══════════════════════════════════════════
+function calcIncoterms() {
+  var fob = parseFloat(document.getElementById('calc-fob').value) || 0;
+  var vol = parseFloat(document.getElementById('calc-vol').value) || 1;
+  var frete = parseFloat(document.getElementById('calc-frete').value) || 0;
+  var segPct = parseFloat(document.getElementById('calc-seguro').value) || 0;
+  var margem = parseFloat(document.getElementById('calc-margem').value) || 0;
+  var tipo = document.getElementById('calc-margem-tipo').value;
+  var seg = fob * segPct / 100;
+  var base = tipo === 'usd' ? fob + margem : fob * (1 + margem / 100);
+  var margemUsd = tipo === 'usd' ? margem : fob * margem / 100;
+  var incs = [
+    {code:'EXW', price: base},
+    {code:'FOB', price: base},
+    {code:'CFR', price: base + frete},
+    {code:'CIF', price: base + frete + seg},
+    {code:'DAP', price: base + frete + seg},
+  ];
+  var comissao = margemUsd * vol;
+  var tipoLabel = tipo === 'usd' ? 'U$ ' + margem + '/m³' : margem + '%';
+  document.getElementById('calc-comissao-txt').innerHTML =
+    'U$ ' + margemUsd.toFixed(2) + '/m³ × ' + vol + ' m³ = <strong>U$ ' + comissao.toFixed(2) + '</strong> (margem de ' + tipoLabel + ')';
+  document.getElementById('incoterm-results').innerHTML = incs.map(function(i){
+    return '<div class="incoterm-pill" onclick="this.parentElement.querySelectorAll(\'.incoterm-pill\').forEach(function(p){p.classList.remove(\'sel\')});this.classList.add(\'sel\')">' +
+      '<div class="ip-code">' + i.code + '</div>' +
+      '<div class="ip-price">U$ ' + i.price.toFixed(2) + '</div></div>';
+  }).join('');
+}
+
+// ══════════════════════════════════════════
+// INLINE COTAÇÃO
+// ══════════════════════════════════════════
+function formatMonthYear(val) {
+  if (!val) return '—';
+  var parts = val.split('-');
+  if (parts.length === 2) {
+    var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    var m = parseInt(parts[1], 10);
+    return (months[m-1] || parts[1]) + '/' + parts[0];
+  }
+  return val;
+}
+
+function buildAutoComment(rfq, cot) {
+  // Use cotacao dims if provided, otherwise fall back to RFQ dims
+  var dims = (cot.esp || cot.larg || cot.comp)
+    ? {esp:cot.esp, larg:cot.larg, comp:cot.comp, qualidade:cot.qual}
+    : ((rfq.dims && rfq.dims[0]) || {});
+  var dimStr = [dims.esp&&dims.esp+'mm', dims.larg&&dims.larg+'mm', dims.comp&&dims.comp+'mm'].filter(Boolean).join(' x ') || '—';
+  var lines = [
+    'Supplier: ' + (cot.fornecedor || '—'),
+    'Species: ' + (rfq.especie || '—'),
+    'Product: ' + (rfq.produto || '—'),
+    'Dimensions: ' + dimStr,
+    'Grade/Quality: ' + (dims.qualidade || cot.qual || '—'),
+    'Volume: ' + (cot.vol ? cot.vol + ' ' + (cot.vol_unit||'m³') : '—'),
+    'FOB Price: ' + (cot.preco ? 'USD ' + cot.preco + '/m³' : '—'),
+    'Load Port: ' + (cot.porto || '—'),
+    'Shipment: ' + formatMonthYear(cot.prazo),
+    'Certificates: ' + (cot.certs || '—'),
+    (cot.glue ? 'Glue Type: ' + cot.glue : ''),
+    (cot.obs ? 'Remarks: ' + cot.obs : ''),
+  ].filter(Boolean);
+  return lines.join('\n');
+}
+// ══════════════════════════════════════════
+// COTAR MODAL
+// ══════════════════════════════════════════
+var cotarRfqId = null;
+var supplierBlockCount = 0;
+
+function addSupplierBlock(data) {
+  data = data || {};
+  supplierBlockCount++;
+  var n = supplierBlockCount;
+  var isComp = cotarRfqId && (S.rfqs.find(function(r){ return r.id === cotarRfqId; }) || {}).produto;
+  var showGlue = isComp && (isComp.toLowerCase().indexOf('compensado') >= 0);
+  var container = document.getElementById('mc-suppliers-container');
+  var div = document.createElement('div');
+  div.className = 'supplier-block';
+  div.id = 'sb-' + n;
+  div.innerHTML =
+    '<div class="supplier-block-header">' +
+      '<span class="supplier-block-num">Fornecedor ' + n + '</span>' +
+      (n > 1 ? '<button class="supplier-block-remove" onclick="document.getElementById(\'sb-' + n + '\').remove();renumberBlocks()" title="Remover">×</button>' : '') +
+    '</div>' +
+    '<div class="quote-form-grid">' +
+      '<div class="field full"><label>Fornecedor</label><input type="text" class="sb-forn" placeholder="Nome do fornecedor" value="' + (data.fornecedor||'') + '"></div>' +
+      '<div class="field"><label>Preço FOB (U$/m³)</label><input type="number" class="sb-preco" placeholder="290" value="' + (data.preco||'') + '"></div>' +
+      '<div class="field"><label>Porto embarque</label><input type="text" class="sb-porto" placeholder="Ex: Itajaí" value="' + (data.porto||'') + '"></div>' +
+      '<div class="field"><label>Margem broker</label><input type="number" class="sb-margem" placeholder="8" step="0.01" value="' + (data.margem||'') + '"></div>' +
+      '<div class="field"><label>Tipo margem</label><select class="sb-margem-tipo"><option value="pct"' + (data.margem_tipo!=='usd'?' selected':'') + '>% sobre FOB</option><option value="usd"' + (data.margem_tipo==='usd'?' selected':'') + '>USD/m³</option></select></div>' +
+      '<div class="field"><label>Volume</label><input type="number" class="sb-vol" placeholder="80" value="' + (data.vol||'') + '"></div>' +
+      '<div class="field"><label>Unidade</label><select class="sb-vol-unit">' +
+        ['m³',"containers 20'","containers 40'",'pés tabule (MBF)'].map(function(u){ return '<option' + (u===(data.vol_unit||'m³')?' selected':'') + '>' + u + '</option>'; }).join('') +
+      '</select></div>' +
+      '<div class="field"><label>Mês/Ano embarque</label><input type="month" class="sb-prazo" value="' + (data.prazo||'') + '"></div>' +
+      '<div class="field"><label>Validade</label><input type="date" class="sb-validade" value="' + (data.validade||'') + '"></div>' +
+      '<div class="field"><label>Certificados</label><input type="text" class="sb-certs" placeholder="FSC, IBAMA…" value="' + (data.certs||'') + '"></div>' +
+      '<div class="field"><label>Resposta</label><select class="sb-status"><option value="sim"' + (data.status!=='nao'&&data.status!=='aguardo'?' selected':'') + '>Confirmado</option><option value="aguardo"' + (data.status==='aguardo'?' selected':'') + '>Aguardando</option><option value="nao"' + (data.status==='nao'?' selected':'') + '>Recusou</option></select></div>' +
+      (showGlue ? '<div class="field"><label>Cola (Glue)</label><input type="text" class="sb-glue" placeholder="MR, WBP…" value="' + (data.glue||'') + '"></div>' : '<div class="field" style="display:none"><input type="text" class="sb-glue"></div>') +
+      '<div style="grid-column:1/-1;font-size:10px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;font-family:var(--mono);padding:4px 0 2px;border-bottom:1px solid var(--border)">Medidas ofertadas</div>' +
+      '<div class="field"><label>Esp. (mm)</label><input type="number" class="sb-esp" placeholder="50" value="' + (data.esp||'') + '"></div>' +
+      '<div class="field"><label>Larg. (mm)</label><input type="number" class="sb-larg" placeholder="150" value="' + (data.larg||'') + '"></div>' +
+      '<div class="field"><label>Comp. (mm)</label><input type="number" class="sb-comp" placeholder="3000" value="' + (data.comp||'') + '"></div>' +
+      '<div class="field"><label>Qualidade</label><input type="text" class="sb-qual" placeholder="FAS, A/BB…" list="ql-list" value="' + (data.qual||'') + '"></div>' +
+      '<div class="field full"><label>Observações</label><input type="text" class="sb-obs" placeholder="Notas adicionais..." value="' + (data.obs||'') + '"></div>' +
+    '</div>';
+  container.appendChild(div);
+}
+
+function renumberBlocks() {
+  document.querySelectorAll('.supplier-block').forEach(function(el, i){
+    var label = el.querySelector('.supplier-block-num');
+    if (label) label.textContent = 'Fornecedor ' + (i + 1);
+  });
+}
+
+function openCotarModal(rfqId) {
+  cotarRfqId = rfqId;
+  supplierBlockCount = 0;
+  var r = S.rfqs.find(function(x){ return x.id === rfqId; });
+  if (!r) return;
+
+  document.getElementById('modal-cotar-title').textContent = 'Cotação — ' + rfqId + ' · ' + r.cliente;
+
+  // Build left panel
+  var dims = (r.dims && r.dims.length) ? r.dims : [];
+  var dimRows = dims.map(function(d){
+    return '<div class="dims-summary-row">' +
+      [d.esp&&d.esp+'mm', d.larg&&d.larg+'mm', d.comp&&d.comp+'mm', d.qualidade, d.vol&&(d.vol+' '+d.unidade)].filter(Boolean).join(' · ') +
+    '</div>';
+  }).join('');
+
+  document.getElementById('cotar-rfq-details').innerHTML =
+    '<div class="split-title left">' +
+      '<svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>' +
+      'Detalhes do RFQ — ' + rfqId +
+    '</div>' +
+    '<div class="rfq-detail-grid">' +
+      '<div class="rfq-detail-row"><span class="dk">Importador</span><span class="dv">' + r.cliente + '</span></div>' +
+      '<div class="rfq-detail-row"><span class="dk">País</span><span class="dv">' + (r.pais||'—') + '</span></div>' +
+      '<div class="rfq-detail-row"><span class="dk">Produto</span><span class="dv">' + (r.produto||'—') + '</span></div>' +
+      '<div class="rfq-detail-row"><span class="dk">Espécie</span><span class="dv">' + (r.especie||'—') + '</span></div>' +
+      '<div class="rfq-detail-row"><span class="dk">Incoterm</span><span class="dv">' + (r.incoterm||'—') + '</span></div>' +
+      '<div class="rfq-detail-row"><span class="dk">País destino</span><span class="dv">' + (r.porto_dest||'—') + '</span></div>' +
+      '<div class="rfq-detail-row"><span class="dk">Preço target</span><span class="dv">' + (r.target ? 'U$ '+r.target+'/m³' : 'não informado') + '</span></div>' +
+      '<div class="rfq-detail-row"><span class="dk">Certificados req.</span><span class="dv">' + (r.certs||'—') + '</span></div>' +
+      '<div class="rfq-detail-row full"><span class="dk">Medidas solicitadas</span>' +
+        '<div class="dims-summary">' + (dimRows || '<span style="color:var(--text3);font-size:12px">Não informado</span>') + '</div>' +
+      '</div>' +
+      (r.obs ? '<div class="rfq-detail-row full"><span class="dk">Observações</span><span class="dv" style="font-size:12px">' + r.obs + '</span></div>' : '') +
+    '</div>';
+
+  // Clear and add first supplier block (pre-fill if cotações exist)
+  var container = document.getElementById('mc-suppliers-container');
+  container.innerHTML = '';
+  var existingCotas = S.cotacoes.filter(function(c){ return c.rfq === rfqId; });
+  if (existingCotas.length) {
+    existingCotas.forEach(function(c){ addSupplierBlock(c); });
+  } else {
+    addSupplierBlock({});
+  }
+
+  document.getElementById('modal-cotar').classList.add('open');
+}
+
+function saveModalCotacao() {
+  if (!cotarRfqId) return;
+  var rfqRef = S.rfqs.find(function(r){ return r.id === cotarRfqId; });
+  var blocks = document.querySelectorAll('.supplier-block');
+  if (!blocks.length) { toast('Adicione pelo menos um fornecedor', 'gold'); return; }
+
+  // Remove old cotações for this RFQ that came from this modal (keep externally added ones)
+  // We replace all cotações for this RFQ
+  S.cotacoes = S.cotacoes.filter(function(c){ return c.rfq !== cotarRfqId; });
+
+  blocks.forEach(function(block){
+    var get = function(cls){ var el = block.querySelector('.' + cls); return el ? el.value : ''; };
+    var fob = parseFloat(get('sb-preco')) || 0;
+    var margem = parseFloat(get('sb-margem')) || 0;
+    var margemTipo = get('sb-margem-tipo') || 'pct';
+    var cot = {
+      rfq: cotarRfqId,
+      fornecedor: get('sb-forn') || '—',
+      preco: get('sb-preco'),
+      margem: margem,
+      margem_tipo: margemTipo,
+      vol: get('sb-vol'),
+      vol_unit: get('sb-vol-unit') || 'm³',
+      porto: get('sb-porto'),
+      prazo: get('sb-prazo'),
+      validade: get('sb-validade'),
+      certs: get('sb-certs'),
+      status: get('sb-status') || 'sim',
+      obs: get('sb-obs'),
+      glue: get('sb-glue'),
+      esp: get('sb-esp'),
+      larg: get('sb-larg'),
+      comp: get('sb-comp'),
+      qual: get('sb-qual'),
+    };
+    S.cotacoes.push(cot);
+
+    // Update/add resumo entry
+    var autoComment = buildAutoComment(rfqRef || {}, cot);
+    var existing = S.resumo.find(function(x){ return x.rfq === cotarRfqId && x.fornecedor === cot.fornecedor; });
+    if (existing) {
+      existing.vol = cot.vol;
+      existing.vol_unit = cot.vol_unit;
+      existing.dims = cot.esp ? [{esp:cot.esp, larg:cot.larg, comp:cot.comp, qualidade:cot.qual}] : ((rfqRef||{}).dims||[]);
+      existing.comment = autoComment;
+    } else {
+      S.resumo.push({
+        rfq: cotarRfqId,
+        data: (rfqRef||{}).data || new Date().toISOString().split('T')[0],
+        fornecedor: cot.fornecedor,
+        cliente: (rfqRef||{}).cliente || '—',
+        produto: (rfqRef||{}).produto || '—',
+        dims: cot.esp ? [{esp:cot.esp, larg:cot.larg, comp:cot.comp, qualidade:cot.qual}] : ((rfqRef||{}).dims||[]),
+        vol: cot.vol,
+        vol_unit: cot.vol_unit || 'm³',
+        estado: 'sent',
+        comment: autoComment,
+      });
+    }
+  });
+
+  if (rfqRef) rfqRef.status = 'quoting';
+
+  closeModal('modal-cotar');
+  renderRFQs();
+  renderCotacoes();
+  renderResumo();
+  renderDashRFQs();
+  updateBadges();
+  toast('Cotações salvas ✓ (' + blocks.length + ' fornecedor' + (blocks.length > 1 ? 'es' : '') + ')');
+}
+
+function toggleCotarForm(rfqId) { openCotarModal(rfqId); }
+function toggleEnviar(rfqId) {
+  var rfq = S.rfqs.find(function(r){ return r.id === rfqId; });
+  if (!rfq) return;
+  rfq.enviado = true;
+
+  var cotas = S.cotacoes.filter(function(c){ return c.rfq === rfqId; });
+
+  if (cotas.length === 0) {
+    // No cotacoes — push a placeholder
+    S.resumo.push({
+      rfq: rfqId,
+      data: rfq.data || new Date().toISOString().split('T')[0],
+      fornecedor: '—', cliente: rfq.cliente,
+      produto: rfq.produto || '—', dims: rfq.dims || [],
+      vol: '', vol_unit: 'm³', estado: 'sent', comment: '',
+    });
+  } else {
+    cotas.forEach(function(c){
+      var existing = S.resumo.find(function(x){
+        return x.rfq === rfqId && x.fornecedor === c.fornecedor;
+      });
+      var autoComment = buildAutoComment(rfq, c);
+      if (existing) {
+        existing.estado = 'sent';
+        existing.comment = existing.comment || autoComment;
+      } else {
+        S.resumo.push({
+          rfq: rfqId,
+          data: rfq.data || new Date().toISOString().split('T')[0],
+          fornecedor: c.fornecedor,
+          cliente: rfq.cliente,
+          produto: rfq.produto || '—',
+          dims: c.esp ? [{esp:c.esp, larg:c.larg, comp:c.comp, qualidade:c.qual}] : (rfq.dims || []),
+          vol: c.vol || '',
+          vol_unit: c.vol_unit || 'm³',
+          estado: 'sent',
+          comment: autoComment,
+        });
+      }
+    });
+  }
+
+  renderCotacoes();
+  updateBadges();
+  nav('resumo');
+  toast('Enviado ✓ — ' + S.resumo.filter(function(x){ return x.rfq === rfqId; }).length + ' linha(s) no Resumo');
+}
+function saveInlineCotacao(rfqId) {
+  var forn = document.getElementById('ic-forn-' + rfqId);
+  var preco = document.getElementById('ic-preco-' + rfqId);
+  if (!forn || !preco) return;
+  var margem = parseFloat(document.getElementById('ic-margem-' + rfqId).value) || 0;
+  var margemTipo = document.getElementById('ic-margem-tipo-' + rfqId).value;
+  var fob = parseFloat(preco.value) || 0;
+  var cot = {
+    rfq: rfqId,
+    fornecedor: forn.value,
+    preco: preco.value,
+    margem: document.getElementById('ic-margem-' + rfqId).value,
+    margem_tipo: margemTipo,
+    vol: document.getElementById('ic-vol-' + rfqId).value,
+    vol_unit: document.getElementById('ic-vol-unit-' + rfqId).value,
+    certs: document.getElementById('ic-certs-' + rfqId).value,
+    porto: document.getElementById('ic-porto-' + rfqId).value,
+    prazo: document.getElementById('ic-prazo-' + rfqId).value,
+    validade: document.getElementById('ic-validade-' + rfqId).value,
+    status: document.getElementById('ic-status-' + rfqId).value,
+    obs: document.getElementById('ic-obs-' + rfqId).value,
+    glue: (document.getElementById('ic-glue-' + rfqId) || {value:''}).value,
+  };
+  S.cotacoes.push(cot);
+
+  // Update RFQ status to reflect it has been quoted
+  var rfqRef = S.rfqs.find(function(r){ return r.id === rfqId; });
+  if (rfqRef) rfqRef.status = 'quoting';
+
+  // Auto-create proposal as 'new'
+  var finalPrice = margemTipo === 'usd' ? fob + margem : fob * (1 + margem / 100);
+  S.propostas.unshift({
+    rfq: rfqId,
+    fornecedor: forn.value,
+    fob: fob,
+    margem: margem,
+    margem_tipo: margemTipo,
+    frete: 0, seguro: 0,
+    incoterm: (S.rfqs.find(function(r){ return r.id === rfqId; }) || {}).incoterm || 'FOB',
+    final: finalPrice,
+    vol: parseFloat(cot.vol) || 0,
+    canal: '',
+    data: new Date().toISOString().split('T')[0],
+    status: 'new',
+    obs: '',
+    followup: { outcome:'', motivo:'', obs:'', valorFinal:'', nextContact:'' },
+  });
+
+  renderCotacoes();
+  renderPropostas();
+  updateBadges();
+  renderDashRFQs();
+  toast('Oferta registrada — proposta criada automaticamente');
+  // Navigate to propostas
+  setTimeout(function(){ nav('propostas'); }, 800);
+}
+
+// ══════════════════════════════════════════
+// EDIT COTAÇÃO
+// ══════════════════════════════════════════
+var editCotIdx = null;
+function openEditCotacao(idx) {
+  // Use the full multi-supplier cotar modal for editing
+  var c = S.cotacoes[idx];
+  if (c) openCotarModal(c.rfq);
+}
+function saveEditCotacao() {
+  // Legacy — no longer used directly; saveModalCotacao handles saves
+  closeModal('modal-edit-cotacao');
+}
+
+// ══════════════════════════════════════════
+// EDIT RFQ
+// ══════════════════════════════════════════
+var editRFQIdx = null;
+function openEditRFQ(idx) {
+  editRFQIdx = idx;
+  var r = S.rfqs[idx];
+  document.getElementById('edit-rfq-id-label').textContent = r.id;
+  document.getElementById('edit-rfq-cliente').value = r.cliente;
+  document.getElementById('edit-rfq-pais').value = r.pais;
+  document.getElementById('edit-rfq-resp').value = r.resp;
+  document.getElementById('edit-rfq-especie').value = r.especie || '';
+  document.getElementById('edit-rfq-porto-dest').value = r.porto_dest;
+  document.getElementById('edit-rfq-target').value = r.target;
+  document.getElementById('edit-rfq-obs').value = r.obs;
+  document.getElementById('edit-rfq-certs').value = r.certs || '';
+  setSelectVal('edit-rfq-canal', r.canal);
+  setSelectVal('edit-rfq-acabamento', r.acabamento);
+  setSelectVal('edit-rfq-incoterm', r.incoterm);
+  setSelectVal('edit-rfq-status', r.status);
+  setSelectVal('edit-rfq-produto', r.produto || '');
+  document.getElementById('edit-dims-body').innerHTML = '';
+  (r.dims || []).forEach(function(d){ addEditDimRow(d); });
+  if (!r.dims || !r.dims.length) addEditDimRow({});
+  document.getElementById('modal-edit-rfq').classList.add('open');
+}
+function addEditDimRow(d) {
+  d = d || {};
+  var tb = document.getElementById('edit-dims-body');
+  var tr = document.createElement('tr');
+  var unitOpts = UNITS.map(function(u){
+    return '<option value="' + u + '"' + (u === (d.unidade || 'm³') ? ' selected' : '') + '>' + u + '</option>';
+  }).join('');
+  tr.innerHTML = '<td><input type="number" placeholder="50" value="' + (d.esp||'') + '" class="d-esp"></td>' +
+    '<td><input type="number" placeholder="150" value="' + (d.larg||'') + '" class="d-larg"></td>' +
+    '<td><input type="number" placeholder="3000" value="' + (d.comp||'') + '" class="d-comp"></td>' +
+    '<td><input type="text" placeholder="FAS, A/BB…" value="' + (d.qualidade||'') + '" class="d-qual" list="ql-list"></td>' +
+    '<td><input type="number" placeholder="80" value="' + (d.vol||'') + '" class="d-vol"></td>' +
+    '<td><select class="d-unit">' + unitOpts + '</select></td>' +
+    '<td><button class="rm-btn" onclick="this.closest(\'tr\').remove()">×</button></td>';
+  tb.appendChild(tr);
+}
+function getEditDims() {
+  return Array.from(document.querySelectorAll('#edit-dims-body tr')).map(function(tr){
+    return {
+      esp: tr.querySelector('.d-esp').value,
+      larg: tr.querySelector('.d-larg').value,
+      comp: tr.querySelector('.d-comp').value,
+      qualidade: tr.querySelector('.d-qual').value,
+      vol: tr.querySelector('.d-vol').value,
+      unidade: tr.querySelector('.d-unit').value,
+    };
+  }).filter(function(d){ return d.esp || d.vol; });
+}
+function saveEditRFQ() {
+  if (editRFQIdx === null) return;
+  var r = S.rfqs[editRFQIdx];
+  r.cliente = document.getElementById('edit-rfq-cliente').value || r.cliente;
+  r.pais = document.getElementById('edit-rfq-pais').value;
+  r.resp = document.getElementById('edit-rfq-resp').value;
+  r.produto = document.getElementById('edit-rfq-produto').value;
+  r.especie = document.getElementById('edit-rfq-especie').value;
+  r.porto_dest = document.getElementById('edit-rfq-porto-dest').value;
+  r.target = document.getElementById('edit-rfq-target').value;
+  r.certs = document.getElementById('edit-rfq-certs').value;
+  r.obs = document.getElementById('edit-rfq-obs').value;
+  r.canal = document.getElementById('edit-rfq-canal').value;
+  r.acabamento = document.getElementById('edit-rfq-acabamento').value;
+  r.incoterm = document.getElementById('edit-rfq-incoterm').value;
+  r.status = document.getElementById('edit-rfq-status').value;
+  var dims = getEditDims();
+  if (dims.length) r.dims = dims;
+
+  // Sync resumo rows that reference this RFQ
+  S.resumo.forEach(function(row){
+    if (row.rfq !== r.id) return;
+    row.cliente = r.cliente;
+    row.produto = r.produto || row.produto;
+    // Rebuild comment with updated RFQ data
+    var cot = S.cotacoes.find(function(c){ return c.rfq === r.id && c.fornecedor === row.fornecedor; });
+    if (cot) row.comment = buildAutoComment(r, cot);
+  });
+
+  closeModal('modal-edit-rfq');
+  renderRFQs();
+  renderCotacoes();
+  renderResumo();
+  renderDashRFQs();
+  renderPropostas();
+  updateBadges();
+  toast('RFQ ' + r.id + ' atualizado em todas as abas');
+}
+
+// ══════════════════════════════════════════
+// EDIT PROPOSTA
+// ══════════════════════════════════════════
+var editPropIdx = null;
+function openEditProp(idx) {
+  editPropIdx = idx;
+  var p = S.propostas[idx];
+  document.getElementById('ep-rfq').innerHTML = S.rfqs.map(function(r){ return '<option value="' + r.id + '"' + (r.id === p.rfq ? ' selected' : '') + '>' + r.id + ' — ' + r.cliente + '</option>'; }).join('');
+  document.getElementById('ep-forn').innerHTML = S.fornecedores.map(function(f){ return '<option' + (f.nome === p.fornecedor ? ' selected' : '') + '>' + f.nome + '</option>'; }).join('');
+  document.getElementById('ep-fob').value = p.fob;
+  document.getElementById('ep-margem').value = p.margem;
+  document.getElementById('ep-frete').value = p.frete;
+  document.getElementById('ep-seguro').value = p.seguro;
+  document.getElementById('ep-vol').value = p.vol;
+  document.getElementById('ep-obs').value = p.obs || '';
+  document.getElementById('ep-data').value = p.data;
+  setSelectVal('ep-incoterm', p.incoterm);
+  setSelectVal('ep-canal', p.canal);
+  setSelectVal('ep-status', p.status || 'sent');
+  setSelectVal('ep-margem-tipo', p.margem_tipo || 'pct');
+  calcEditProp();
+  document.getElementById('modal-edit-prop').classList.add('open');
+}
+function calcEditProp() {
+  var fob = parseFloat(document.getElementById('ep-fob').value) || 0;
+  var margem = parseFloat(document.getElementById('ep-margem').value) || 0;
+  var tipo = document.getElementById('ep-margem-tipo').value;
+  var frete = parseFloat(document.getElementById('ep-frete').value) || 0;
+  var seg = parseFloat(document.getElementById('ep-seguro').value) || 0;
+  var inc = document.getElementById('ep-incoterm').value;
+  var base = tipo === 'usd' ? fob + margem : fob * (1 + margem / 100);
+  if (['CFR','CIF','DAP'].indexOf(inc) >= 0) base += frete;
+  if (['CIF','DAP'].indexOf(inc) >= 0) base += seg;
+  document.getElementById('ep-final').value = 'U$ ' + base.toFixed(2) + '/m³';
+}
+function saveEditProp() {
+  if (editPropIdx === null) return;
+  var p = S.propostas[editPropIdx];
+  var fob = parseFloat(document.getElementById('ep-fob').value) || 0;
+  var margem = parseFloat(document.getElementById('ep-margem').value) || 0;
+  var tipo = document.getElementById('ep-margem-tipo') ? document.getElementById('ep-margem-tipo').value : (p.margem_tipo || 'pct');
+  var frete = parseFloat(document.getElementById('ep-frete').value) || 0;
+  var seg = parseFloat(document.getElementById('ep-seguro').value) || 0;
+  var inc = document.getElementById('ep-incoterm').value;
+  var final = tipo === 'usd' ? fob + margem : fob * (1 + margem / 100);
+  if (['CFR','CIF','DAP'].indexOf(inc) >= 0) final += frete;
+  if (['CIF','DAP'].indexOf(inc) >= 0) final += seg;
+  p.rfq = document.getElementById('ep-rfq').value;
+  p.fornecedor = document.getElementById('ep-forn').value;
+  p.fob = fob; p.margem = margem; p.margem_tipo = tipo; p.frete = frete; p.seguro = seg;
+  p.incoterm = inc; p.final = final;
+  p.vol = parseFloat(document.getElementById('ep-vol').value) || p.vol;
+  p.canal = document.getElementById('ep-canal').value;
+  p.data = document.getElementById('ep-data').value;
+  p.obs = document.getElementById('ep-obs').value;
+  p.status = document.getElementById('ep-status').value;
+  closeModal('modal-edit-prop');
+  renderPropostas(); renderRFQs(); renderDashRFQs(); updateBadges();
+  toast('Proposta atualizada com sucesso');
+}
+
+// ══════════════════════════════════════════
+// DELETE
+// ══════════════════════════════════════════
+var delContext = null;
+function askDelete(type, idx, label) {
+  delContext = { type: type, idx: idx };
+  document.getElementById('del-title').textContent = type === 'rfq' ? 'Excluir RFQ' : 'Excluir proposta';
+  document.getElementById('del-desc').innerHTML = 'Você está prestes a excluir:<br><strong style="color:var(--text)">' + label + '</strong><br><span style="color:var(--danger)">Esta ação não pode ser desfeita.</span>';
+  document.getElementById('modal-confirm-del').classList.add('open');
+}
+function confirmDelete() {
+  if (!delContext) return;
+  if (delContext.type === 'rfq') {
+    var oldId = S.rfqs[delContext.idx].id;
+    S.rfqs.splice(delContext.idx, 1);
+    // Clean up cotações, resumo, and propostas referencing deleted RFQ
+    S.cotacoes = S.cotacoes.filter(function(c){ return c.rfq !== oldId; });
+    S.resumo = S.resumo.filter(function(x){ return x.rfq !== oldId; });
+    S.propostas = S.propostas.filter(function(p){ return p.rfq !== oldId; });
+    // Sort by creation date ascending so oldest = rfq-001
+    S.rfqs.sort(function(a,b){ return (a.data||'').localeCompare(b.data||''); });
+    // Renumber sequentially
+    var idMap = {};
+    S.rfqs.forEach(function(r, i){
+      var newId = 'rfq-' + String(i+1).padStart(3,'0');
+      idMap[r.id] = newId;
+      r.id = newId;
+    });
+    // Update references in cotacoes and propostas
+    S.cotacoes.forEach(function(c){ if(idMap[c.rfq]) c.rfq = idMap[c.rfq]; });
+    S.propostas.forEach(function(p){ if(idMap[p.rfq]) p.rfq = idMap[p.rfq]; });
+    closeModal('modal-confirm-del');
+    renderRFQs(); renderDashRFQs(); renderCotacoes(); renderPropostas(); renderResumo(); updateBadges();
+    toast('RFQ excluído e numeração reorganizada', 'danger');
+  } else if (delContext.type === 'resumo') {
+    S.resumo.splice(delContext.idx, 1);
+    closeModal('modal-confirm-del');
+    renderResumo(); updateBadges();
+    toast('Linha excluída do resumo', 'danger');
+  } else if (delContext.type === 'mkt') {
+    S.mercado.splice(delContext.idx, 1);
+    closeModal('modal-confirm-del');
+    renderMercado();
+    toast('Oferta do mercado excluída', 'danger');
+  } else if (delContext.type === 'cot') {
+    S.cotacoes.splice(delContext.idx, 1);
+    closeModal('modal-confirm-del');
+    renderCotacoes(); updateBadges();
+    toast('Oferta excluída', 'danger');
+  } else if (delContext.type === 'prop') {
+    S.propostas.splice(delContext.idx, 1);
+    closeModal('modal-confirm-del');
+    renderPropostas(); updateBadges();
+    toast('Proposta excluída', 'danger');
+  }
+  delContext = null;
+}
+
+// ══════════════════════════════════════════
+// HELPER
+// ══════════════════════════════════════════
+function setSelectVal(id, val) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  Array.from(el.options).forEach(function(o){ o.selected = (o.value === val || o.text === val); });
+}
+
+// ══════════════════════════════════════════
+// OFERTAS DO MERCADO
+// ══════════════════════════════════════════
+S.mercado = [
+  {id:'mkt-001',data:'2025-05-22',fornecedor:'Madeireira Becker',produto:'Serrada',especie:'Ipê',esp:'50',larg:'150',comp:'3000',qual:'FAS',vol:'200 m³',preco:'285',porto:'Itajaí',validade:'2025-06-30',clientes:'Chen Trading, Nakamura Wood',obs:''},
+];
+var mktCounter = 1;
+
+function saveMercado() {
+  mktCounter++;
+  var id = 'mkt-' + String(mktCounter).padStart(3,'0');
+  S.mercado.unshift({
+    id: id,
+    data: new Date().toISOString().split('T')[0],
+    fornecedor: document.getElementById('mkt-fornecedor').value || '—',
+    produto: document.getElementById('mkt-produto').value || '—',
+    especie: document.getElementById('mkt-especie').value || '',
+    esp: document.getElementById('mkt-esp').value,
+    larg: document.getElementById('mkt-larg').value,
+    comp: document.getElementById('mkt-comp').value,
+    qual: document.getElementById('mkt-qual').value,
+    vol: document.getElementById('mkt-vol').value,
+    preco: document.getElementById('mkt-preco').value,
+    porto: document.getElementById('mkt-porto').value,
+    validade: document.getElementById('mkt-validade').value,
+    clientes: document.getElementById('mkt-clientes').value,
+    obs: document.getElementById('mkt-obs').value,
+  });
+  closeModal('modal-mercado');
+  renderMercado();
+  toast('Oferta do mercado registrada');
+}
+
+function renderMercado() {
+  var tb = document.getElementById('mercado-body');
+  if (!tb) return;
+  var prodFilter = (document.getElementById('filter-mercado-produto') || {}).value || '';
+  var list = prodFilter ? S.mercado.filter(function(m){ return m.produto === prodFilter; }) : S.mercado;
+  if (!list.length) {
+    tb.innerHTML = '<tr class="empty-row"><td colspan="12">Nenhuma oferta registrada</td></tr>';
+    return;
+  }
+  tb.innerHTML = list.map(function(m, i){
+    var realIdx = S.mercado.indexOf(m);
+    var dateFmt = m.data ? m.data.split('-').reverse().join('/') : '—';
+    var dims = [m.esp, m.larg, m.comp].filter(Boolean).join('×') + (m.esp ? 'mm' : '');
+    var clientesList = m.clientes ? m.clientes.split(/[,\n]/).map(function(c){ return '<span class="chip" style="margin:1px">' + c.trim() + '</span>'; }).join(' ') : '—';
+    return '<tr>' +
+      '<td style="font-family:var(--mono);font-size:12px;white-space:nowrap">' + m.id + '<br><span style="font-size:10px;color:var(--text3)">' + dateFmt + '</span></td>' +
+      '<td>' + m.produto + (m.especie ? '<br><span style="font-size:11px;color:var(--text2)">' + m.especie + '</span>' : '') + '</td>' +
+      '<td><strong>' + m.fornecedor + '</strong></td>' +
+      '<td style="font-family:var(--mono);font-size:12px">' + (m.esp||'—') + '</td>' +
+      '<td style="font-family:var(--mono);font-size:12px">' + (m.larg||'—') + '</td>' +
+      '<td style="font-family:var(--mono);font-size:12px">' + (m.comp||'—') + '</td>' +
+      '<td>' + (m.qual||'—') + '</td>' +
+      '<td style="font-family:var(--mono);font-size:12px">' + (m.vol||'—') + '</td>' +
+      '<td style="font-family:var(--mono);color:var(--accent);font-weight:500">' + (m.preco ? 'U$ ' + m.preco : '—') + '</td>' +
+      '<td>' + clientesList + '</td>' +
+      '<td style="white-space:nowrap">' +
+        '<button class="btn btn-secondary btn-sm" style="margin-right:4px" onclick="openEditMercado(' + realIdx + ')">✎</button>' +
+        '<button class="btn btn-sm" style="background:var(--danger-bg);color:var(--danger);border:1px solid #e8b4b4" onclick="askDelete(\'mkt\',' + realIdx + ',\'' + m.id + ' — ' + m.fornecedor.replace(/'/g,"\\'") + '\')">✕</button>' +
+      '</td>' +
+    '</tr>';
+  }).join('');
+}
+
+var editMktIdx = null;
+function openEditMercado(idx) {
+  editMktIdx = idx;
+  var m = S.mercado[idx];
+  document.getElementById('mkt-fornecedor').value = m.fornecedor;
+  document.getElementById('mkt-produto').value = m.produto;
+  document.getElementById('mkt-especie').value = m.especie || '';
+  document.getElementById('mkt-esp').value = m.esp || '';
+  document.getElementById('mkt-larg').value = m.larg || '';
+  document.getElementById('mkt-comp').value = m.comp || '';
+  document.getElementById('mkt-qual').value = m.qual || '';
+  document.getElementById('mkt-vol').value = m.vol || '';
+  document.getElementById('mkt-preco').value = m.preco || '';
+  document.getElementById('mkt-porto').value = m.porto || '';
+  document.getElementById('mkt-validade').value = m.validade || '';
+  document.getElementById('mkt-clientes').value = m.clientes || '';
+  document.getElementById('mkt-obs').value = m.obs || '';
+  // Change modal button to update
+  document.querySelector('#modal-mercado .modal-footer .btn-primary').onclick = function(){ saveEditMercado(); };
+  document.querySelector('#modal-mercado .modal-head h2').textContent = 'Editar oferta do mercado';
+  document.getElementById('modal-mercado').classList.add('open');
+}
+function saveEditMercado() {
+  if (editMktIdx === null) return;
+  var m = S.mercado[editMktIdx];
+  m.fornecedor = document.getElementById('mkt-fornecedor').value || m.fornecedor;
+  m.produto = document.getElementById('mkt-produto').value;
+  m.especie = document.getElementById('mkt-especie').value;
+  m.esp = document.getElementById('mkt-esp').value;
+  m.larg = document.getElementById('mkt-larg').value;
+  m.comp = document.getElementById('mkt-comp').value;
+  m.qual = document.getElementById('mkt-qual').value;
+  m.vol = document.getElementById('mkt-vol').value;
+  m.preco = document.getElementById('mkt-preco').value;
+  m.porto = document.getElementById('mkt-porto').value;
+  m.validade = document.getElementById('mkt-validade').value;
+  m.clientes = document.getElementById('mkt-clientes').value;
+  m.obs = document.getElementById('mkt-obs').value;
+  editMktIdx = null;
+  // Reset modal to "new" mode
+  document.querySelector('#modal-mercado .modal-footer .btn-primary').onclick = function(){ saveMercado(); };
+  document.querySelector('#modal-mercado .modal-head h2').textContent = 'Nova oferta do mercado';
+  closeModal('modal-mercado');
+  renderMercado();
+  toast('Oferta do mercado atualizada');
+}
+
+function openCotacaoDetail(rfqId) {
+  var r = S.rfqs.find(function(x){ return x.id === rfqId; });
+  if (!r) return;
+  var rfqIdx = S.rfqs.indexOf(r);
+  var cotas = S.cotacoes.filter(function(c){ return c.rfq === rfqId; });
+
+  var dims = (r.dims && r.dims.length) ? r.dims : [];
+  var dimRows = dims.map(function(d){
+    return '<div class="dims-summary-row">' +
+      [d.esp&&d.esp+'mm', d.larg&&d.larg+'mm', d.comp&&d.comp+'mm', d.qualidade, d.vol&&(d.vol+' '+d.unidade)].filter(Boolean).join(' · ') +
+    '</div>';
+  }).join('') || '<span style="font-size:12px;color:var(--text3)">Não informado</span>';
+
+  var cotasHtml = cotas.length ? cotas.map(function(c){
+    return '<div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;margin-bottom:8px">' +
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 16px">' +
+        '<div class="rfq-detail-row"><span class="dk">Fornecedor</span><span class="dv">' + (c.fornecedor||'—') + '</span></div>' +
+        '<div class="rfq-detail-row"><span class="dk">Preço FOB</span><span class="dv" style="color:var(--accent);font-weight:500">' + (c.preco?'U$ '+c.preco+'/m³':'—') + '</span></div>' +
+        '<div class="rfq-detail-row"><span class="dk">Volume</span><span class="dv">' + (c.vol?c.vol+' '+(c.vol_unit||'m³'):'—') + '</span></div>' +
+        '<div class="rfq-detail-row"><span class="dk">Porto embarque</span><span class="dv">' + (c.porto||'—') + '</span></div>' +
+        '<div class="rfq-detail-row"><span class="dk">Embarque</span><span class="dv">' + (c.prazo?formatMonthYear(c.prazo):'—') + '</span></div>' +
+        '<div class="rfq-detail-row"><span class="dk">Validade</span><span class="dv">' + (c.validade||'—') + '</span></div>' +
+        '<div class="rfq-detail-row"><span class="dk">Certificados</span><span class="dv">' + (c.certs||'—') + '</span></div>' +
+        '<div class="rfq-detail-row"><span class="dk">Margem</span><span class="dv">' + (c.margem?c.margem+(c.margem_tipo==='usd'?' USD/m³':'%'):'—') + '</span></div>' +
+        (c.esp ? '<div class="rfq-detail-row"><span class="dk">Medidas ofertadas</span><span class="dv" style="font-family:var(--mono);font-size:12px">' + [c.esp+'mm',c.larg&&c.larg+'mm',c.comp&&c.comp+'mm'].filter(Boolean).join(' × ') + (c.qual?' · '+c.qual:'') + '</span></div>' : '') +
+        (c.glue ? '<div class="rfq-detail-row"><span class="dk">Cola (Glue)</span><span class="dv">' + c.glue + '</span></div>' : '') +
+        (c.obs ? '<div class="rfq-detail-row" style="grid-column:1/-1"><span class="dk">Observações</span><span class="dv" style="font-size:12px">' + c.obs + '</span></div>' : '') +
+      '</div>' +
+    '</div>';
+  }).join('') : '<div style="font-size:13px;color:var(--text3);font-style:italic;padding:8px 0">Nenhuma cotação registrada ainda.</div>';
+
+  document.getElementById('resumo-detail-title').textContent = 'Detalhes — ' + rfqId + ' · ' + r.cliente;
+  document.getElementById('resumo-detail-body').innerHTML =
+    '<div style="font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;font-family:var(--mono);margin-bottom:8px">Dados do RFQ</div>' +
+    '<div class="rfq-detail-grid" style="margin-bottom:16px">' +
+      '<div class="rfq-detail-row"><span class="dk">Importador</span><span class="dv">' + r.cliente + '</span></div>' +
+      '<div class="rfq-detail-row"><span class="dk">País</span><span class="dv">' + (r.pais||'—') + '</span></div>' +
+      '<div class="rfq-detail-row"><span class="dk">Produto</span><span class="dv">' + (r.produto||'—') + '</span></div>' +
+      '<div class="rfq-detail-row"><span class="dk">Espécie</span><span class="dv">' + (r.especie||'—') + '</span></div>' +
+      '<div class="rfq-detail-row"><span class="dk">Incoterm</span><span class="dv">' + (r.incoterm||'—') + '</span></div>' +
+      '<div class="rfq-detail-row"><span class="dk">País destino</span><span class="dv">' + (r.porto_dest||'—') + '</span></div>' +
+      '<div class="rfq-detail-row"><span class="dk">Preço target</span><span class="dv">' + (r.target?'U$ '+r.target+'/m³':'não informado') + '</span></div>' +
+      '<div class="rfq-detail-row"><span class="dk">Certificados req.</span><span class="dv">' + (r.certs||'—') + '</span></div>' +
+      '<div class="rfq-detail-row full"><span class="dk">Medidas solicitadas</span>' +
+        '<div class="dims-summary" style="margin-top:4px">' + dimRows + '</div>' +
+      '</div>' +
+      (r.obs ? '<div class="rfq-detail-row full"><span class="dk">Observações</span><span class="dv" style="font-size:12px">' + r.obs + '</span></div>' : '') +
+    '</div>' +
+    '<div style="font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;font-family:var(--mono);margin-bottom:8px">Cotações registradas (' + cotas.length + ')</div>' +
+    cotasHtml;
+
+  document.getElementById('resumo-detail-edit-btn').textContent = '✎ Editar RFQ';
+  document.getElementById('resumo-detail-edit-btn').onclick = function(){
+    closeModal('modal-resumo-detail');
+    openEditRFQ(rfqIdx);
+  };
+  document.getElementById('modal-resumo-detail').classList.add('open');
+}
+
+function openResumoDetail(rfqId, resumoIdx) {
+  var r = S.rfqs.find(function(x){ return x.id === rfqId; });
+  if (!r) { toast('RFQ não encontrado', 'danger'); return; }
+  var idx = S.rfqs.indexOf(r);
+  var resumoRow = S.resumo[resumoIdx] || S.resumo.find(function(x){ return x.rfq === rfqId; });
+
+  document.getElementById('resumo-detail-title').textContent = 'Detalhes — ' + rfqId + ' · ' + r.cliente;
+
+  // Find the specific cotação matching this resumo row (by fornecedor)
+  var cota = resumoRow
+    ? S.cotacoes.find(function(c){ return c.rfq === rfqId && c.fornecedor === resumoRow.fornecedor; })
+    : null;
+
+  var cotaHtml = cota
+    ? '<div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px">' +
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px 20px">' +
+          '<div class="rfq-detail-row"><span class="dk">Fornecedor</span><span class="dv">' + cota.fornecedor + '</span></div>' +
+          '<div class="rfq-detail-row"><span class="dk">Preço FOB</span><span class="dv" style="color:var(--accent);font-weight:500">' + (cota.preco ? 'U$ '+cota.preco+'/m³' : '—') + '</span></div>' +
+          '<div class="rfq-detail-row"><span class="dk">Volume</span><span class="dv">' + (cota.vol ? cota.vol+' '+(cota.vol_unit||'m³') : '—') + '</span></div>' +
+          '<div class="rfq-detail-row"><span class="dk">Porto embarque</span><span class="dv">' + (cota.porto||'—') + '</span></div>' +
+          '<div class="rfq-detail-row"><span class="dk">Embarque</span><span class="dv">' + (cota.prazo ? formatMonthYear(cota.prazo) : '—') + '</span></div>' +
+          '<div class="rfq-detail-row"><span class="dk">Validade</span><span class="dv">' + (cota.validade || '—') + '</span></div>' +
+          '<div class="rfq-detail-row"><span class="dk">Certificados</span><span class="dv">' + (cota.certs||'—') + '</span></div>' +
+          (cota.glue ? '<div class="rfq-detail-row"><span class="dk">Cola (Glue)</span><span class="dv">' + cota.glue + '</span></div>' : '') +
+          '<div class="rfq-detail-row"><span class="dk">Margem</span><span class="dv">' + (cota.margem ? cota.margem + (cota.margem_tipo==='usd'?' USD/m³':'%') : '—') + '</span></div>' +
+          '<div class="rfq-detail-row"><span class="dk">Resposta forn.</span><span class="dv">' + ({sim:'Confirmado',nao:'Recusou',aguardo:'Aguardando'}[cota.status]||cota.status) + '</span></div>' +
+          (cota.obs ? '<div class="rfq-detail-row" style="grid-column:1/-1"><span class="dk">Observações</span><span class="dv" style="font-size:12px">' + cota.obs + '</span></div>' : '') +
+        '</div>' +
+      '</div>'
+    : '<div style="font-size:13px;color:var(--text3);font-style:italic;padding:12px 0">Nenhuma cotação registrada para este RFQ.</div>';
+
+  // Dims
+  var dims = (r.dims && r.dims.length) ? r.dims : [];
+  var dimRows = dims.map(function(d){
+    return '<div class="dims-summary-row">' +
+      [d.esp&&d.esp+'mm', d.larg&&d.larg+'mm', d.comp&&d.comp+'mm', d.qualidade, d.vol&&(d.vol+' '+d.unidade)].filter(Boolean).join(' · ') +
+    '</div>';
+  }).join('') || '<span style="font-size:12px;color:var(--text3)">Não informado</span>';
+
+  document.getElementById('resumo-detail-body').innerHTML =
+    '<div style="font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;font-family:var(--mono);margin-bottom:8px">Dados do RFQ</div>' +
+    '<div class="rfq-detail-grid" style="margin-bottom:16px">' +
+      '<div class="rfq-detail-row"><span class="dk">Importador</span><span class="dv">' + r.cliente + '</span></div>' +
+      '<div class="rfq-detail-row"><span class="dk">País</span><span class="dv">' + (r.pais||'—') + '</span></div>' +
+      '<div class="rfq-detail-row"><span class="dk">Produto</span><span class="dv">' + (r.produto||'—') + '</span></div>' +
+      '<div class="rfq-detail-row"><span class="dk">Espécie</span><span class="dv">' + (r.especie||'—') + '</span></div>' +
+      '<div class="rfq-detail-row"><span class="dk">Incoterm</span><span class="dv">' + (r.incoterm||'—') + '</span></div>' +
+      '<div class="rfq-detail-row"><span class="dk">País destino</span><span class="dv">' + (r.porto_dest||'—') + '</span></div>' +
+      '<div class="rfq-detail-row"><span class="dk">Preço target</span><span class="dv">' + (r.target ? 'U$ '+r.target+'/m³' : 'não informado') + '</span></div>' +
+      '<div class="rfq-detail-row"><span class="dk">Certificados req.</span><span class="dv">' + (r.certs||'—') + '</span></div>' +
+      '<div class="rfq-detail-row full"><span class="dk">Medidas solicitadas</span>' +
+        '<div class="dims-summary" style="margin-top:4px">' + dimRows + '</div>' +
+      '</div>' +
+    '</div>' +
+    '<div style="font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;font-family:var(--mono);margin-bottom:8px">Cotação registrada</div>' +
+    cotaHtml;
+
+  document.getElementById('resumo-detail-edit-btn').onclick = function(){
+    closeModal('modal-resumo-detail');
+    openEditRFQ(idx);
+  };
+
+  document.getElementById('modal-resumo-detail').classList.add('open');
+}
+
+// ══════════════════════════════════════════
+// PENDING COTAÇÕES MODAL
+// ══════════════════════════════════════════
+function openPendingModal() {
+  var pending = S.resumo.filter(function(r){ return r.estado === 'sent'; });
+  var rfqMap = {};
+  S.rfqs.forEach(function(r){ rfqMap[r.id] = r; });
+  var el = document.getElementById('pending-list');
+
+  if (!pending.length) {
+    el.innerHTML = '<div style="padding:32px;text-align:center;color:var(--text3);font-style:italic">Nenhuma cotação pendente no momento.</div>';
+  } else {
+    el.innerHTML = '<table style="width:100%;border-collapse:collapse">' +
+      '<thead><tr style="background:var(--bg)">' +
+        '<th style="padding:10px 16px;font-size:11px;font-family:var(--mono);text-align:left;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--border)">RFQ</th>' +
+        '<th style="padding:10px 16px;font-size:11px;font-family:var(--mono);text-align:left;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--border)">Importador</th>' +
+        '<th style="padding:10px 16px;font-size:11px;font-family:var(--mono);text-align:left;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--border)">Produto</th>' +
+        '<th style="padding:10px 16px;font-size:11px;font-family:var(--mono);text-align:left;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--border)">Medidas</th>' +
+        '<th style="padding:10px 16px;font-size:11px;font-family:var(--mono);text-align:left;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--border)">Volume</th>' +
+        '<th style="padding:10px 16px;font-size:11px;font-family:var(--mono);text-align:left;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--border)">Target</th>' +
+        '<th style="padding:10px 16px;font-size:11px;font-family:var(--mono);text-align:left;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--border)">Ação</th>' +
+      '</tr></thead><tbody>' +
+      pending.map(function(row){
+        var rfq = rfqMap[row.rfq] || {};
+        var dims = (rfq.dims && rfq.dims[0]) || {};
+        var dimStr = [dims.esp, dims.larg, dims.comp].filter(Boolean).join('×') + (dims.esp ? 'mm' : '—');
+        var volStr = (row.vol || dims.vol || '—') + ' ' + (row.vol_unit || dims.unidade || 'm³');
+        var dateFmt = row.data ? row.data.split('-').reverse().join('/') : '—';
+        return '<tr style="border-bottom:1px solid var(--border);background:#FEF9EC">' +
+          '<td style="padding:12px 16px;font-family:var(--mono);font-size:12px">' + row.rfq + '<br><span style="font-size:10px;color:var(--text3)">' + dateFmt + '</span></td>' +
+          '<td style="padding:12px 16px;font-size:13px"><strong>' + row.cliente + '</strong></td>' +
+          '<td style="padding:12px 16px;font-size:13px">' + row.produto + '</td>' +
+          '<td style="padding:12px 16px;font-family:var(--mono);font-size:12px">' + dimStr + '</td>' +
+          '<td style="padding:12px 16px;font-family:var(--mono);font-size:12px">' + volStr + '</td>' +
+          '<td style="padding:12px 16px;font-family:var(--mono);font-size:12px">' + (rfq.target ? 'U$ ' + rfq.target + '/m³' : '<span style="color:var(--text3)">n/i</span>') + '</td>' +
+          '<td style="padding:12px 16px">' +
+            '<button class="btn btn-primary btn-sm" onclick="closeModal(\'modal-pending\');openCotarModal(\'' + row.rfq + '\')">' +
+              'Cotar →' +
+            '</button>' +
+          '</td>' +
+        '</tr>';
+      }).join('') +
+      '</tbody></table>';
+  }
+  document.getElementById('modal-pending').classList.add('open');
+}
+
+// ══════════════════════════════════════════
+// COMMENTS
+// ══════════════════════════════════════════
+var commentIdx = null;
+var commentViewMode = false;
+function openComment(idx) {
+  commentIdx = idx;
+  commentViewMode = false;
+  var row = S.resumo[idx];
+  document.getElementById('comment-text').value = row.comment || '';
+  document.getElementById('comment-view').style.display = 'none';
+  document.getElementById('comment-edit').style.display = 'block';
+  document.getElementById('comment-view').textContent = row.comment || '';
+  document.getElementById('modal-comment').classList.add('open');
+}
+function toggleCommentView() {
+  commentViewMode = !commentViewMode;
+  var txt = document.getElementById('comment-text').value;
+  document.getElementById('comment-view').textContent = txt;
+  document.getElementById('comment-view').style.display = commentViewMode ? 'block' : 'none';
+  document.getElementById('comment-edit').style.display = commentViewMode ? 'none' : 'block';
+}
+function saveComment() {
+  if (commentIdx === null) return;
+  S.resumo[commentIdx].comment = document.getElementById('comment-text').value;
+  closeModal('modal-comment');
+  renderResumo();
+  toast('Comentário salvo');
+}
+
+// ══════════════════════════════════════════
+// DASHBOARD CHARTS
+// ══════════════════════════════════════════
+function renderDashboard() {
+  renderDashRFQs();
+  renderDashCharts();
+}
+
+function renderDashCharts() {
+  var yearEl = document.getElementById('dash-filter-year');
+  var monthEl = document.getElementById('dash-filter-month');
+  var statusEl = document.getElementById('dash-filter-status');
+  var year = yearEl ? parseInt(yearEl.value) : new Date().getFullYear();
+  var month = monthEl ? parseInt(monthEl.value) : 0;
+  var statusFilter = statusEl ? statusEl.value : 'all';
+
+  // Collect data from resumo
+  var allData = S.resumo;
+
+  // Apply status filter
+  var filtered = allData.filter(function(r){
+    if (statusFilter === 'confirmed') return r.estado === 'confirmed';
+    if (statusFilter === 'rejected') return r.estado === 'rejected';
+    return true;
+  });
+
+  // Filter by year
+  var byYear = filtered.filter(function(r){
+    return r.data && r.data.startsWith(String(year));
+  });
+
+  // Filter by month if set
+  var byMonth = month > 0 ? byYear.filter(function(r){
+    return r.data && parseInt(r.data.split('-')[1]) === month;
+  }) : byYear;
+
+  // Monthly bar chart data (for selected year)
+  var months = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  var monthlyCounts = months.map(function(_, mi){
+    return byYear.filter(function(r){ return r.data && parseInt(r.data.split('-')[1]) === mi+1; }).length;
+  });
+  var maxBar = Math.max.apply(null, monthlyCounts.concat([1]));
+
+  // Year-over-year (last 3 years)
+  var currentYear = new Date().getFullYear();
+  var years = [currentYear-2, currentYear-1, currentYear];
+  var yoyData = years.map(function(y){
+    return filtered.filter(function(r){ return r.data && r.data.startsWith(String(y)); }).length;
+  });
+  var maxYoy = Math.max.apply(null, yoyData.concat([1]));
+
+  // Client pie chart
+  var clientMap = {};
+  byMonth.forEach(function(r){
+    var c = r.cliente || 'Desconhecido';
+    clientMap[c] = (clientMap[c] || 0) + 1;
+  });
+  var clientEntries = Object.keys(clientMap).map(function(k){ return {name:k, val:clientMap[k]}; });
+  clientEntries.sort(function(a,b){ return b.val-a.val; });
+  var total = clientEntries.reduce(function(s,e){ return s+e.val; }, 0) || 1;
+
+  // Pie colors
+  var pieColors = ['#1A3D6B','#2563A8','#F59E0B','#EF4444','#10B981','#8B5CF6','#EC4899','#06B6D4','#84CC16','#F97316'];
+
+  // Build bar chart SVG (monthly)
+  var barW = 34, barGap = 6, chartH = 120, padL = 30, padB = 24;
+  var totalW = months.length * (barW + barGap) + padL + 10;
+  var barSVG = '<svg viewBox="0 0 ' + totalW + ' ' + (chartH+padB) + '" style="width:100%;height:' + (chartH+padB) + 'px">';
+  barSVG += '<line x1="' + padL + '" y1="0" x2="' + padL + '" y2="' + chartH + '" stroke="var(--border)" stroke-width="1"/>';
+  barSVG += '<line x1="' + padL + '" y1="' + chartH + '" x2="' + totalW + '" y2="' + chartH + '" stroke="var(--border)" stroke-width="1"/>';
+  months.forEach(function(m, i){
+    var x = padL + i*(barW+barGap) + barGap/2;
+    var h = monthlyCounts[i] > 0 ? Math.max(4, (monthlyCounts[i]/maxBar)*chartH) : 2;
+    var y = chartH - h;
+    var fill = monthlyCounts[i] > 0 ? '#1A3D6B' : 'var(--border)';
+    barSVG += '<rect x="' + x + '" y="' + y + '" width="' + barW + '" height="' + h + '" fill="' + fill + '" rx="3"/>';
+    if (monthlyCounts[i] > 0) barSVG += '<text x="' + (x+barW/2) + '" y="' + (y-4) + '" text-anchor="middle" font-size="10" fill="var(--text2)">' + monthlyCounts[i] + '</text>';
+    barSVG += '<text x="' + (x+barW/2) + '" y="' + (chartH+14) + '" text-anchor="middle" font-size="10" fill="var(--text3)">' + m + '</text>';
+  });
+  barSVG += '</svg>';
+
+  // Year-over-year bar chart
+  var yoyW = 60, yoyGap = 20, yoyH = 120;
+  var yoyTotal = years.length * (yoyW + yoyGap) + 40;
+  var yoySVG = '<svg viewBox="0 0 ' + yoyTotal + ' ' + (yoyH+24) + '" style="width:100%;height:' + (yoyH+24) + 'px">';
+  yoySVG += '<line x1="30" y1="0" x2="30" y2="' + yoyH + '" stroke="var(--border)" stroke-width="1"/>';
+  yoySVG += '<line x1="30" y1="' + yoyH + '" x2="' + yoyTotal + '" y2="' + yoyH + '" stroke="var(--border)" stroke-width="1"/>';
+  years.forEach(function(y, i){
+    var x = 40 + i*(yoyW+yoyGap);
+    var h = yoyData[i] > 0 ? Math.max(4, (yoyData[i]/maxYoy)*yoyH) : 2;
+    var yy = yoyH - h;
+    yoySVG += '<rect x="' + x + '" y="' + yy + '" width="' + yoyW + '" height="' + h + '" fill="#F59E0B" rx="3"/>';
+    if (yoyData[i] > 0) yoySVG += '<text x="' + (x+yoyW/2) + '" y="' + (yy-4) + '" text-anchor="middle" font-size="11" fill="var(--text2)">' + yoyData[i] + '</text>';
+    yoySVG += '<text x="' + (x+yoyW/2) + '" y="' + (yoyH+14) + '" text-anchor="middle" font-size="11" fill="var(--text3)">' + y + '</text>';
+  });
+  yoySVG += '</svg>';
+
+  // Pie chart SVG
+  var pieSVG = '<svg viewBox="-1 -1 2 2" style="width:160px;height:160px;transform:rotate(-90deg)">';
+  var cumAngle = 0;
+  clientEntries.forEach(function(e, i){
+    var angle = (e.val / total) * 2 * Math.PI;
+    var x1 = Math.cos(cumAngle), y1 = Math.sin(cumAngle);
+    var x2 = Math.cos(cumAngle + angle), y2 = Math.sin(cumAngle + angle);
+    var large = angle > Math.PI ? 1 : 0;
+    pieSVG += '<path d="M0,0 L' + x1.toFixed(4) + ',' + y1.toFixed(4) + ' A1,1,0,' + large + ',1,' + x2.toFixed(4) + ',' + y2.toFixed(4) + ' Z" fill="' + (pieColors[i%pieColors.length]) + '"/>';
+    cumAngle += angle;
+  });
+  pieSVG += '</svg>';
+
+  // Pie legend
+  var legend = clientEntries.slice(0,8).map(function(e,i){
+    var pct = total > 0 ? Math.round(e.val/total*100) : 0;
+    return '<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">' +
+      '<span style="width:10px;height:10px;border-radius:2px;background:' + pieColors[i%pieColors.length] + ';flex-shrink:0"></span>' +
+      '<span style="font-size:12px;color:var(--text)">' + e.name + '</span>' +
+      '<span style="font-size:11px;color:var(--text3);margin-left:auto;font-family:var(--mono)">' + e.val + ' (' + pct + '%)</span>' +
+    '</div>';
+  }).join('');
+
+  var el = document.getElementById('dash-charts');
+  if (!el) return;
+  el.innerHTML =
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">' +
+      '<div class="detail-card">' +
+        '<h4>Cotações por mês — ' + year + '</h4>' +
+        barSVG +
+      '</div>' +
+      '<div class="detail-card">' +
+        '<h4>Comparativo ano a ano</h4>' +
+        yoySVG +
+      '</div>' +
+    '</div>' +
+    '<div class="detail-card">' +
+      '<h4 style="margin-bottom:12px">Cotações por cliente</h4>' +
+      '<div style="display:flex;gap:24px;align-items:center">' +
+        '<div style="flex-shrink:0">' + (clientEntries.length ? pieSVG : '<div style="width:160px;height:160px;border-radius:50%;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--text3)">Sem dados</div>') + '</div>' +
+        '<div style="flex:1">' + (legend || '<span style="font-size:13px;color:var(--text3);font-style:italic">Nenhuma cotação no período</span>') + '</div>' +
+      '</div>' +
+    '</div>';
+}
+
+// ══════════════════════════════════════════
+// RESUMO DAS COTAÇÕES
+// ══════════════════════════════════════════
+// RESUMO DAS COTAÇÕES
+// ══════════════════════════════════════════
+function renderResumo() {
+  var tb = document.getElementById('resumo-body');
+  if (!tb) return;
+  // Remove orphan rows (RFQ was deleted)
+  S.resumo = S.resumo.filter(function(row){
+    return S.rfqs.some(function(r){ return r.id === row.rfq; });
+  });
+  var prodFilter = (document.getElementById('filter-resumo-produto') || {}).value || '';
+  var list = S.resumo.filter(function(row){ return !prodFilter || row.produto === prodFilter; });
+  if (!list.length) {
+    tb.innerHTML = '<tr class="empty-row"><td colspan="12">Nenhuma cotação enviada ainda.</td></tr>';
+    updateBadges(); return;
+  }
+  tb.innerHTML = list.map(function(row){
+    var realIdx = S.resumo.indexOf(row);
+    var dateFmt = row.data ? row.data.split('-').reverse().join('/') : '—';
+    var dims = (row.dims && row.dims.length) ? row.dims[0] : {};
+    var rowClass = row.estado === 'confirmed' ? 'row-confirmed' : row.estado === 'rejected' ? 'row-rejected' : 'row-sent';
+    var commentText = row.comment || '';
+    var rfqGlobalIdx = S.rfqs.findIndex(function(x){ return x.id === row.rfq; });
+    var cotGlobalIdx = S.cotacoes.findIndex(function(c){ return c.rfq === row.rfq && c.fornecedor === row.fornecedor; });
+
+    var btnView = '<button title="Ver detalhes" onclick="openResumoDetail(\'' + row.rfq + '\',' + realIdx + ')" style="width:28px;height:28px;border-radius:50%;background:var(--surface2);border:1.5px solid var(--border2);color:var(--text2);cursor:pointer;display:inline-flex;align-items:center;justify-content:center" onmouseenter="this.style.background=\'var(--accent-bg)\';this.style.color=\'var(--accent)\'" onmouseleave="this.style.background=\'var(--surface2)\';this.style.color=\'var(--text2)\'">👁</button>';
+    var btnEditRFQ = rfqGlobalIdx >= 0 ? '<button title="Editar RFQ" onclick="openEditRFQ(' + rfqGlobalIdx + ')" style="width:28px;height:28px;border-radius:50%;background:var(--accent-bg);border:1.5px solid var(--accent);color:var(--accent);cursor:pointer;display:inline-flex;align-items:center;justify-content:center"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg></button>' : '';
+    var btnEditCot = cotGlobalIdx >= 0 ? '<button title="Editar cotação" onclick="openEditCotacao(' + cotGlobalIdx + ')" style="width:28px;height:28px;border-radius:50%;background:#EDE8FB;border:1.5px solid #C4B5FD;color:#4A3AAA;cursor:pointer;display:inline-flex;align-items:center;justify-content:center"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg></button>' : '';
+    var btnConfirm = '<button class="btn-confirm" onclick="setResumoEstado(' + realIdx + ',\'confirmed\')" title="Fechar"' + (row.estado==='confirmed'?' style="opacity:.4;cursor:default" disabled':'') + '>✓</button>';
+    var btnReject  = '<button class="btn-reject"  onclick="setResumoEstado(' + realIdx + ',\'rejected\')"  title="Perdido"' + (row.estado==='rejected'?' style="opacity:.4;cursor:default" disabled':'') + '>✕</button>';
+    var btnReset   = '<button title="Voltar pendente" onclick="setResumoEstado(' + realIdx + ',\'sent\')" style="width:28px;height:28px;border-radius:50%;background:#FEF3C7;border:1.5px solid #FCD34D;color:#92400E;cursor:pointer;display:inline-flex;align-items:center;justify-content:center">↩</button>';
+    var btnComment = '<button title="Comentário" onclick="openComment(' + realIdx + ')" style="width:28px;height:28px;border-radius:50%;background:var(--info-bg);border:1.5px solid #93C5FD;color:var(--info);cursor:pointer;display:inline-flex;align-items:center;justify-content:center">💬</button>';
+    var btnDel = '<button title="Excluir" onclick="askDelete(\'resumo\',' + realIdx + ',\'' + row.rfq + ' — ' + (row.fornecedor||'').replace(/'/g,"\\'") + '\')" style="width:28px;height:28px;border-radius:50%;background:#FEE2E2;border:1.5px solid #FCA5A5;color:#DC2626;cursor:pointer;display:inline-flex;align-items:center;justify-content:center"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg></button>';
+
+    return '<tr class="' + rowClass + '">' +
+      '<td style="font-family:var(--mono);font-size:12px;font-weight:500">' + row.rfq + '</td>' +
+      '<td style="font-family:var(--mono);font-size:12px">' + dateFmt + '</td>' +
+      '<td><strong>' + (row.fornecedor||'—') + '</strong></td>' +
+      '<td>' + (row.cliente||'—') + '</td>' +
+      '<td>' + (row.produto||'—') + '</td>' +
+      '<td style="font-family:var(--mono);font-size:12px">' + (dims.esp||'—') + '</td>' +
+      '<td style="font-family:var(--mono);font-size:12px">' + (dims.larg||'—') + '</td>' +
+      '<td style="font-family:var(--mono);font-size:12px">' + (dims.comp||'—') + '</td>' +
+      '<td style="font-family:var(--mono);font-size:12px">' + (row.vol||'—') + '</td>' +
+      '<td style="font-family:var(--mono);font-size:12px">' + (row.vol_unit||'m³') + '</td>' +
+      '<td style="font-size:12px;max-width:160px">' + (commentText ? '<span style="cursor:pointer;color:var(--info)" onclick="openComment(' + realIdx + ')">' + commentText.substring(0,40) + (commentText.length>40?'…':'') + '</span>' : '<span style="color:var(--text3);font-size:11px">—</span>') + '</td>' +
+      '<td style="white-space:nowrap;display:flex;gap:3px;align-items:center;flex-wrap:wrap">' +
+        btnView + btnEditRFQ + btnConfirm + btnReject + btnReset + btnComment + btnDel +
+      '</td>' +
+    '</tr>';
+  }).join('');
+  updateBadges();
+}
+
+function setResumoEstado(idx, estado) {
+  if (!S.resumo[idx]) return;
+  S.resumo[idx].estado = estado;
+  renderResumo();
+  var msgs = {confirmed:'Negócio fechado ✓', rejected:'Marcado como perdido ✕', sent:'Voltou para pendente'};
+  toast(msgs[estado]||'', estado==='rejected'?'danger':'');
+}
+
+// ══════════════════════════════════════════
+// BADGES
+// ══════════════════════════════════════════
+function updateBadges() {
+  document.getElementById('badge-rfqs').textContent = S.rfqs.filter(function(r){ return r.status === 'novo' || r.status === 'quoting'; }).length;
+  document.getElementById('badge-cotas').textContent = S.cotacoes.filter(function(c){ return c.status === 'aguardo'; }).length;
+  var pendingResumo = S.resumo.filter(function(r){ return r.estado === 'sent'; }).length;
+  var badgeEl = document.getElementById('badge-resumo');
+  if (badgeEl) { badgeEl.textContent = pendingResumo; badgeEl.style.display = pendingResumo > 0 ? 'inline-flex' : 'none'; }
+  // Update dashboard stat cards
+  var openEl = document.getElementById('stat-rfqs-open');
+  if (openEl) openEl.textContent = S.rfqs.filter(function(r){ return r.status === 'novo' || r.status === 'quoting'; }).length;
+  var pendEl = document.getElementById('stat-cotas-pend');
+  if (pendEl) pendEl.textContent = S.resumo.filter(function(r){ return r.estado === 'sent'; }).length;
+  var confEl = document.getElementById('stat-confirmadas');
+  if (confEl) confEl.textContent = S.resumo.filter(function(r){ return r.estado === 'confirmed'; }).length;
+  var perdEl = document.getElementById('stat-perdidas');
+  if (perdEl) perdEl.textContent = S.resumo.filter(function(r){ return r.estado === 'rejected'; }).length;
+}
+
+// ══════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════
+renderDashboard();
+renderRFQs();
+renderCotacoes();
+renderPropostas();
+renderFornecedores();
+renderMercado();
+renderResumo();
+calcIncoterms();
+updateBadges();
+</script>
+</body>
+</html>
